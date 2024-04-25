@@ -302,3 +302,47 @@ DRSA_createSampledRawOutput21 <- function(dataS = dataS, eventCols = c("e1", "e2
   }
   return(df_sample)
 }
+
+
+# Function to repair missing columns in a dataframe, e.g. if no events happen at time k, than include hazard at time k-1
+# hard coded times 1:20
+repair_dataframe <- function(df, tmax = 20) {
+  # Check for missing columns from 1 to 20
+  missing_cols <- setdiff(paste0(1:tmax), colnames(df))
+  
+  # Iterate through missing columns
+  for (col in missing_cols) {
+    # Find the index of the missing column
+    col_index <- as.numeric(gsub("\\.", "", col))
+    
+    # Create the missing column and fill it with values from the previous column
+    if (col_index > 1) {
+      prev_col <- paste0(col_index - 1)
+      df[[col]] <- df[[prev_col]]
+      #colnames(df)[col_index] <- col
+    }
+  }
+  df <- df[, paste0(1:tmax)]
+  return(df)
+}
+
+# function to read .importance files when created with
+# ranger option --impmeasure 2
+inread_importance_value <- function(x){
+  y <- readr::read_file(x)
+  # Split the string on ":" and "\n"
+  split_y <- unlist(strsplit(y, "[:\n]"))
+  # Remove empty elements
+  split_y <- split_y[split_y != ""]
+  # Remove whitespaces
+  split_y <- trimws(split_y)
+  #Remove "\r"
+  split_y <- gsub(split_y, pattern = "\\r", replacement ="" )
+  #create df
+  df <- data.frame(
+    name = split_y[c(TRUE, FALSE)],
+    value = as.numeric(split_y[c(FALSE, TRUE)])
+  )
+  return(df$value)
+}
+
