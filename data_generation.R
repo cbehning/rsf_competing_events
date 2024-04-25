@@ -67,7 +67,7 @@ for(p in p_vector){
         dir.create(f_path, showWarnings = FALSE)
         f_path <- paste(f_path, .Platform$file.sep, sep = "")
         
-        for(n in c(100)){
+        for(n in c(1000)){
           set.seed(seed)
           print(paste("e1 and raw data -p:", p, "    seed:", seed, "   n:", n, "  b:", b))
           createSampledData(  p = p, b = b, n = n,  seed = seed, path = f_path, limits = limits, vars = vars, scenario = scenario)
@@ -89,10 +89,11 @@ for(set in c("train")){
           # create path
           f_path <- paste(paste(path_prefix, seed, sep =  .Platform$file.sep),
                           .Platform$file.sep, sep = "")
-          for(n in c(100)){
+          for(n in c(1000)){
+            # inread training data used for imputeRoot and imputeNode with times for e1, e2 and cens
             tmp <- read.csv(file = paste(f_path,"data_", set,"_", round(p,1),"_", b,"_", seed, "_", n, "_p_", vars,"_k.csv", sep = "" ),
                             header = TRUE, sep = ",")
-            ## create data for Naive apporach, treating competing event times as censoring
+            ## create data for Naive approach, treating competing event times as censoring
             #inread data
             tmp_ignore <- tmp
             tmp_ignore$status <- (tmp_ignore$status ==1 )*1
