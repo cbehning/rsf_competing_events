@@ -10,7 +10,7 @@
 ##############################################################################
 
 
-# The following contains R-Code to help createing simulation data of section 3
+# The following contains R-Code to help createing simulation data of section 3.
 
 require(tidyverse)
 require(discSurv)

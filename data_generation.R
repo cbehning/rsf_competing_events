@@ -13,7 +13,10 @@
 # The following contains R-Code to create the data needed to train the random
 # survial forest.
 # 
-# 
+# It will create a folder containing subfolders for each seed with generated for 
+# each seed and simulation method.
+# imputeRoot and imputeNode will use the same datasets for training.
+# Naive, Reference and imputeOnce have seperate dataset for training.
 
 
 ## Input:
@@ -24,7 +27,8 @@
 # setup:      simulation setup1 or setup2. Coded with setup1: scenario 231121, setup2: scenario 231213
 # seed:       seed to start simulation with (paper used 71123 as stating seed)
 # repeats:    number of simulation repeats -1
-# f_path:     path to store the data
+
+
 
 #load required functions
 source("functions_data_generating.R")
@@ -38,7 +42,7 @@ scenario <- ifelse(setup == "setup1", "231121",
 # set a seed
 seed_start <-71123
 # set number of repeats
-repeats <- 1-1 # Warning: if set to 1000 for original analysis will create ~ 20GB of data (~14MB per seed)
+repeats <- 1-1 # Warning: if set to 1000 for original analysis will create ~ 20GB of data (~14MB per repeat)
 
 # possible values for parameter affecting e1 rate
 p_vector <- c(0.2, 0.4, 0.8)
