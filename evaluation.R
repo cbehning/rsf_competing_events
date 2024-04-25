@@ -314,11 +314,11 @@ if(setup == "setup1" ){
   
   ### inread censoring times g_hat
   ghat_nodes <- read.table( paste("pred_setup1",.Platform$file.sep ,"g_hat_imputeNodes_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""),
-                            sep = ",", skip = 1,header = FALSE)
+                            sep = ",",header = FALSE)
   names(ghat_nodes ) <- c("treeID", "nodeID", 1:20)
   
   ghat_root <- read.table( paste("pred_setup1",.Platform$file.sep ,"g_hat_imputeRoot_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""),
-                           sep = ",",skip = 1,header = FALSE)
+                           sep = ",",header = FALSE)
   names(ghat_root) <- c("treeID", "nodeID",  1:20)
   # Test if all rows have equal values
   (ghat_root[, -2] %>% n_distinct()) == (ghat_root[, 1] %>% n_distinct())
