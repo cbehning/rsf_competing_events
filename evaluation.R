@@ -213,6 +213,7 @@ if(setup == "setup1"){
 
 
 #### Figure: Estimate of G for imputeRoot and imputeNode #####
+# Creates figures S6 and S7
 # For one simulation setting (q=0.2, b= 0.85, Steup1), we can show the distribution of 
 # the estimated censoring suvival functions.
 # The output has been flushed from the ranger console output.
@@ -228,12 +229,12 @@ if(setup == "setup1" ){
   
   # inread data that was flushed as output from one simulation run of ranger
   # all treeIDs, nodeIDS, censoring times (imputed and true)
-  trees_nodes <- read.table( paste("cens_times_imputeNodes_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""), sep = ",",
-                             skip = 1,header = FALSE)
+  trees_nodes <- read.table( paste("pred_setup1",.Platform$file.sep ,"cens_times_imputeNodes_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" ,sep = ""),
+                             sep = ",",skip = 1,header = FALSE)
   names(trees_nodes) <- c("treeID", "nodeID", "time", "sampleID")
   
-  trees_root <- read.table( paste("cens_times_imputeRoot_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""), sep = ",",
-                            skip = 1,header = FALSE)
+  trees_root <- read.table( paste("pred_setup1",.Platform$file.sep ,"cens_times_imputeRoot_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""),
+                            sep = ",", skip = 1,header = FALSE)
   names(trees_root) <- c("treeID", "nodeID", "time", "sampleID")
   
   train_data <- read.csv(paste("data_", setup,.Platform$file.sep, seed,.Platform$file.sep, 
@@ -312,12 +313,12 @@ if(setup == "setup1" ){
   
   
   ### inread censoring times g_hat
-  ghat_nodes <- read.table( paste("g_hat_imputeNodes_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""), sep = ",",
-                            skip = 1,header = FALSE)
+  ghat_nodes <- read.table( paste("pred_setup1",.Platform$file.sep ,"g_hat_imputeNodes_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""),
+                            sep = ",", skip = 1,header = FALSE)
   names(ghat_nodes ) <- c("treeID", "nodeID", 1:20)
   
-  ghat_root <- read.table( paste("g_hat_imputeRoot_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""), sep = ",",
-                           skip = 1,header = FALSE)
+  ghat_root <- read.table( paste("pred_setup1",.Platform$file.sep ,"g_hat_imputeRoot_0.",p,"_",b,"_",seed,"_",n,"_p_",k,"_k.log" , sep = ""),
+                           sep = ",",skip = 1,header = FALSE)
   names(ghat_root) <- c("treeID", "nodeID",  1:20)
   # Test if all rows have equal values
   (ghat_root[, -2] %>% n_distinct()) == (ghat_root[, 1] %>% n_distinct())

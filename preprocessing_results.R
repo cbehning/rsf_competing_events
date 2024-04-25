@@ -340,4 +340,331 @@ all_data <- rbind(
 )
 
 
+#### Compute C-index ####
+#consider e1 data as true reference data
+
+# caluclate marker values.
+# for each subject (row) calculate the cumsum of H
+
+if(TRUE){ # can take a long time to run, when repeats get larger
+  markerlist <- list()
+  markerlist[["impute"]] <- lapply(simulation_chf_120, rowSums)
+  markerlist[["e1"]] <- lapply(simulation_chf_e1_120, rowSums)
+  markerlist[["ignore"]] <- lapply(simulation_chf_ignore_120, rowSums)
+  markerlist[["oio"]] <- lapply(simulation_chf_oio_120, rowSums)
+  markerlist[["oiroot"]] <- lapply(simulation_chf_oinroot_120, rowSums)
+  
+  # initialize dataframe for C-index
+  cindex_df <- expand.grid(method = c("impute", "e1", "ignore", "oio", "oiroot"),
+                           b = c("0.85", "1", "1.25"),
+                           p = c("2", "4", "8"),
+                           k = 50,
+                           seed = filter_seed,
+                           n = 1000,
+                           cindexCR = NA,
+                           cindex = NA)
+  
+  for(i in  1:nrow(cindex_df)){
+    
+    if(i %% 1000==0) {
+      # Print on the screen some message
+      cat(paste0("iteration: ", i, "\n"))
+    }
+    
+    p <- cindex_df$p[i]  
+    b <- cindex_df$b[i]  
+    n <- cindex_df$n[i]
+    k <- cindex_df$k[i]
+    method <- cindex_df$method[i]
+    seed <- cindex_df$seed[i]
+    
+    # get training data
+    test_data <- simulation_data_files[[paste("data_test_0.",p,"_",b,"_",seed,"_",n,"_p_",k , "_k" , sep = "")]][, c("time", "status")] 
+    test_data$e1 <- (test_data$status == 1)*1
+    test_data$e2 <- (test_data$status == 2)*1
+    test_time <- test_data$time
+    test_status <- test_data[, c("e1", "e2")]
+    # get test 
+    train_data <- simulation_data_files[[paste("data_train_0.",p,"_",b,"_",seed,"_",n,"_p_",k , "_k",  sep = "")]][, c("time", "status")]
+    train_data$e1 <- (train_data$status == 1)*1
+    train_data$e2 <- (train_data$status == 2)*1
+    train_time <- train_data$time
+    train_status <- train_data[, c("e1", "e2")]
+    
+    if(method == "impute"){
+      markername <- paste("test_crsubdist_0",p,"_",b,"_",seed,"_", n, sep = "")
+    }else if(method =="e1"){
+      markername <- paste("test_crsubdist_e1_0",p,"_",b,"_",seed,"_", n, sep = "")
+    }else if(method =="ignore"){
+      markername <- paste("test_crsubdist_ignore_0",p,"_",b,"_",seed,"_", n, sep = "")
+    }else if(method =="oio"){
+      markername <- paste("test_crsubdist_oio_0",p,"_",b,"_",seed,"_", n, sep = "")
+    }else if(method == "oiroot"){
+      markername = paste("test_crsubdist_oinroot_0",p,"_",b,"_",seed,"_", n, sep = "")
+    }
+    marker <- markerlist[[method]][[markername]] %>% as.matrix()
+    
+    # x <- discSurv::cIndexCompRisks(marker = marker,
+    #                                testTime = test_time,
+    #                                testEvents = test_status,
+    #                                trainTime = train_time,
+    #                                trainEvents = train_status
+    # )
+    # 
+    # cindex_df[i, "cindexCR"]  <- x
+    
+    
+    cindex_df[i, "cindex"]  <- discSurv::cIndex(marker = marker[, 1], 
+                                                testTime = test_time,
+                                                testEvent = test_status[,1], 
+                                                trainTime = train_time,
+                                                trainEvent = train_status[, 1 ]
+    )
+  }
+  
+  write.csv(cindex_df, file= paste(simulation_path, "cindex_df_rep1000.csv", paste =""), row.names = FALSE)
+}else{
+  cindex_df<- read.csv(file= paste(simulation_path, "cindex_df_rep1000.csv", paste =""))
+}
+
+mapping_method_type  <- data.frame(
+  method = c("impute",  "ignore", "oio", "e1", "oiroot"), 
+  type =  c( "imputeNode",  "Naive approach", "imputeOnce", "Reference", "imputeRoot" ))
+
+## Tables and graphs for Brier Score
+
+# use package "pec" to compute prediction error curves and Brier Scores
+
+require(prodlim)
+require(pec)
+
+
+if(TRUE){ # can take long with increasing number of repeats, run once and save data
+  tmax <- 20
+  scenario <- gsub("^.*_([0-9]+)\\/", "\\1", simulation_path)
+  
+  bierscore_df <- expand.grid(method = c("impute", "e1", "ignore", "oio", "oiroot"),
+                              b = c("0.85", "1", "1.25"),
+                              p = c("2", "4", "8"),
+                              seed = filter_seed,
+                              n = 1000,
+                              k = 50, 
+                              IBS = NA)
+  bierscore_2<- matrix(nrow = nrow(bierscore_df), ncol = 20 ) #[, paste0("bs_", 1:20)] <- NA
+  
+  for(i in  1:nrow(bierscore_df)){ #
+    
+    if(i %% 1000==0) {
+      # Print on the screen some message
+      cat(paste0("iteration: ", i, "\n"))
+    }
+    
+    p <- bierscore_df$p[i]  
+    b <- bierscore_df$b[i]  
+    n <- bierscore_df$n[i]
+    k <- bierscore_df$k[i]
+    method <- bierscore_df$method[i]
+    seed <- bierscore_df$seed[i]
+    
+    test_data <- simulation_data_files[[paste("data_test_0.",p,"_",b,"_",seed,"_",n,"_p_",k , "_k" , sep = "")]][, c("time", "status")] 
+    
+    train_data <- simulation_data_files[[paste("data_train_0.",p,"_",b,"_",seed,"_",n,"_p_",k , "_k" , sep = "")]][, c("time", "status")]
+    
+    
+    
+    if(method == "impute"){
+      markername <- paste("test_crsubdist_0",p,"_",b,"_",seed,"_", n, sep = "")
+      sprCIF <- simulation_cif[[markername]] %>% as.matrix()
+    }else if(method =="e1"){
+      markername <- paste("test_crsubdist_e1_0",p,"_",b,"_",seed,"_", n, sep = "")
+      sprCIF <- simulation_cif_e1[[markername]] %>% as.matrix()
+    }else if(method =="ignore"){
+      markername <- paste("test_crsubdist_ignore_0",p,"_",b,"_",seed,"_", n, sep = "")
+      sprCIF <- simulation_cif_ignore[[markername]] %>% as.matrix()
+    }else if(method =="oio"){
+      markername <- paste("test_crsubdist_oio_0",p,"_",b,"_",seed,"_", n, sep = "")
+      sprCIF <- simulation_cif_oio[[markername]] %>% as.matrix()
+    }else if(method =="oiroot"){
+      markername <- paste("test_crsubdist_oinroot_0",p,"_",b,"_",seed,"_", n, sep = "")
+      sprCIF <- simulation_cif_oinroot[[markername]] %>% as.matrix()
+    }
+    
+    
+    
+    #sprCIF <- as.matrix(simulation_cif[[paste("test_crsubdist_0",p,"_",b,"_",seed,"_",n, sep = "")]] )
+    
+    tmax_i <- max(test_data$time)
+    timepoints_i <- timepoints_i_0 <- test_data$time %>% unique() %>% sort()
+    if(length(timepoints_i_0) == timepoints_i_0[length(timepoints_i_0)]){
+      timepoints_i_0 <- timepoints_i_0[-length(timepoints_i_0)]
+      #timepoints_i_0 <- 1:(tmax-1)
+    }else if(length(timepoints_i) < tmax_i ){
+      timepoints_i <- 1:(length(timepoints_i) +1)
+    }
+    # print("-----------------")
+    # print(paste("i:", i))
+    # print(length(timepoints_i_0))
+    # print(length(timepoints_i))
+    # print(tmax_i)
+    
+    
+    # prediction error curves
+    PECS <- pec::pec(matrix(sprCIF[, timepoints_i], nrow = nrow(sprCIF)), # matrix containing the predicted survival curves
+                     formula = Hist(time, status) ~1, # the formula for the censoring model
+                     data = cbind(test_data, covar = 1), # test data
+                     #traindata = train_data, # training data
+                     times =timepoints_i_0, # vector of time points on which to evaluate
+                     cens.model = "marginal",
+                     cause=1,
+                     exact = FALSE
+    )
+    
+    bierscore_df[i, "IBS"] <- pec::ibs(PECS)[2]
+    bierscore_2[i,1:tmax_i] <- PECS$AppErr$matrix[1:tmax_i]
+    
+    
+    #pec cindex
+    
+    # cINDs<- pec::cindex(matrix(sprCIF[, timepoints_i], nrow = nrow(sprCIF)), 
+    #             formula= Hist(time, status) ~1,
+    #             data =  cbind(test_data, covar = 1), 
+    #             eval.times = timepoints_i, 
+    #             #pred.times = seq(1, 14, 1), 
+    #             cause=1, 
+    #             lyl = FALSE,
+    #             cens.model = "marginal"
+    #)
+  }
+  
+  
+  write.csv(bierscore_df, file= paste(simulation_path, "integrated_brierscore_",n,"_rep1000.csv", sep =""), row.names = FALSE)
+  write.csv(bierscore_2, file= paste(simulation_path, "td_brierscore_",n,"_rep1000.csv", sep =""), row.names = FALSE) 
+}else{
+  bierscore_df <- read.csv(paste(simulation_path, "integrated_brierscore_",n,"_rep1000.csv", sep =""))
+  bierscore_2 <- paste(simulation_path, "td_brierscore_",n,"_rep1000.csv", sep ="")
+}
+
+#### inread importance files ####
+# list all files to check number available
+importance_files_e1 <- list.files(paste(simulation_path, "imp2/Reference/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
+importance_files_nodes <- list.files(paste(simulation_path, "imp2/imputeNodes/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
+importance_files_ignore <- list.files(paste(simulation_path, "imp2/Naive/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
+importance_files_oio <- list.files(paste(simulation_path, "imp2/imputeOnce/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
+importance_files_oiroot <- list.files(paste(simulation_path, "imp2/imputeRoot/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
+
+# for both events
+importance_nodes <-  lapply(importance_files_nodes, FUN = inread_importance_value)
+# ignoring competing events mechanism
+importance_ignore <- lapply(importance_files_ignore, FUN = inread_importance_value)
+# and for e1 only
+importance_e1 <-  lapply(importance_files_e1, FUN = inread_importance_value)
+# only impute once - oio
+importance_oio <-  lapply(importance_files_oio, FUN = inread_importance_value)
+# only impute in root nodes - oinroot
+importance_oinroot <-  lapply(importance_files_oiroot, FUN = inread_importance_value)
+
+
+# names
+names(importance_nodes) <- gsub(importance_files_nodes,
+                                pattern = paste( simulation_path, "/", sep = "" ), replacement = "") %>% 
+  gsub(pattern = ".importance", replacement = "") %>% gsub(pattern = "^.*/", replacement = "")
+
+names(importance_ignore) <- gsub(importance_files_ignore,
+                                 pattern = paste( simulation_path, "/", sep = "" ), replacement = "") %>% 
+  gsub(pattern = ".importance", replacement = "") %>% gsub(pattern = "^.*/", replacement = "")
+
+names(importance_e1) <- gsub(importance_files_e1,
+                             pattern = paste( simulation_path, "/", sep = "" ), replacement = "") %>% 
+  gsub(pattern = ".importance", replacement = "") %>% gsub(pattern = "^.*/", replacement = "")
+
+
+names(importance_oio) <- gsub(importance_files_oio,
+                              pattern = paste( simulation_path, "/", sep = "" ), replacement = "") %>% 
+  gsub(pattern = ".importance", replacement = "") %>% gsub(pattern = "^.*/", replacement = "")
+
+names(importance_oinroot) <- gsub(importance_files_oiroot,
+                                  pattern = paste( simulation_path, "/", sep = "" ), replacement = "") %>% 
+  gsub(pattern = ".importance", replacement = "") %>% gsub(pattern = "^.*/", replacement = "")
+
+# prepare data for importance plot
+# create dataframes from list
+importance_nodes_df <- bind_rows(importance_nodes, .id = 'simulation') %>% t() %>%data.frame() %>% rownames_to_column() 
+importance_ignore_df <- bind_rows(importance_ignore, .id = 'simulation') %>% t() %>%data.frame() %>% rownames_to_column() 
+importance_e1_df <- bind_rows(importance_e1, .id = 'simulation') %>% t() %>%data.frame() %>% rownames_to_column() 
+importance_oio_df <- bind_rows(importance_oio, .id = 'simulation') %>% t() %>%data.frame() %>% rownames_to_column() 
+importance_oinroot_df <- bind_rows(importance_oinroot, .id = 'simulation') %>% t() %>%data.frame() %>% rownames_to_column() 
+
+# pivot to long for plotting
+importance_nodes_df_long <- importance_nodes_df %>%
+  pivot_longer(-rowname ,  names_to = "column", values_to = "VIMP")%>%
+  mutate( p = gsub(rowname , pattern = "crsubdist_0", replacement = "0.") %>%
+            gsub(pattern = "_.*$", replacement = "" )%>% as.numeric(),
+          data_seed = gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+            gsub(pattern = "+$", replacement = "" ) %>% gsub(pattern = "^.*_", replacement = ""),
+          b =  gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+            gsub(pattern = "_[^_]+$", replacement = "" ) %>%
+            gsub(pattern = "^.*_", replacement = ""),
+          n = gsub(rowname , pattern = "_123", replacement = "")%>%
+            gsub(pattern = "^.*_", replacement = ""),
+          type = "imputeNode" )
+# true event 1
+importance_e1_df_long <- importance_e1_df %>%
+  pivot_longer(-rowname , names_to = "column", values_to = "VIMP")%>%
+  mutate( p = gsub(rowname , pattern = "crsubdist_e1_0",
+                   replacement = "0.") %>%
+            gsub(pattern = "_.*$", replacement = "" )%>% as.numeric(),
+          data_seed = gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+            gsub(pattern = "+$", replacement = "" ) %>% gsub(pattern = "^.*_", replacement = ""),
+          b =  gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+            gsub(pattern = "_[^_]+$", replacement = "" ) %>%
+            gsub(pattern = "^.*_", replacement = ""),
+          n = gsub(rowname , pattern = "_123", replacement = "")%>%
+            gsub(pattern = "^.*_", replacement = ""),
+          type = "Reference")
+# ignore: competing event time as censoring time
+importance_ignore_df_long <- importance_ignore_df %>%
+  pivot_longer(-rowname , names_to = "column", values_to = "VIMP")%>%
+  mutate( p = gsub(rowname , pattern = "crsubdist_ignore_0", replacement = "0.") %>%
+            gsub(pattern = "_.*$", replacement = "" )%>% as.numeric(),
+          data_seed = gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+            gsub(pattern = "+$", replacement = "" ) %>% gsub(pattern = "^.*_", replacement = ""),
+          b =  gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+            gsub(pattern = "_[^_]+$", replacement = "" ) %>%
+            gsub(pattern = "^.*_", replacement = ""),
+          n = gsub(rowname , pattern = "^.*_", replacement = ""),
+          type = "Naive approach")
+# only impte once
+importance_oio_df_long <- importance_oio_df %>%
+  pivot_longer(-rowname ,  names_to = "column", values_to = "VIMP")%>%
+  mutate(p = gsub(rowname , pattern = "crsubdist_oio_0", replacement = "0.") %>%
+           gsub(pattern = "_.*$", replacement = "" )%>% as.numeric(),
+         data_seed = gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+           gsub(pattern = "+$", replacement = "" ) %>% gsub(pattern = "^.*_", replacement = ""),
+         b =  gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+           gsub(pattern = "_[^_]+$", replacement = "" ) %>%
+           gsub(pattern = "^.*_", replacement = ""),
+         n = gsub(rowname , pattern = "^.*_", replacement = ""), 
+         type = "imputeOnce")
+#impute only in root nodes oinroot
+importance_oinroot_df_long <-   importance_oinroot_df %>%
+  pivot_longer(-rowname , names_to = "column", values_to = "VIMP") %>%
+  mutate(p = gsub(rowname , pattern = "crsubdist_oinroot_0", replacement = "0.") %>% gsub(pattern = "_.*$", replacement = "" )%>% as.numeric(),
+         data_seed = gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+           gsub(pattern = "+$", replacement = "" ) %>% gsub(pattern = "^.*_", replacement = ""),
+         b =  gsub(rowname , pattern = "_[^_]+$", replacement = "" ) %>% 
+           gsub(pattern = "_[^_]+$", replacement = "" ) %>%
+           gsub(pattern = "^.*_", replacement = ""),
+         n = gsub(rowname , pattern = "^.*_", replacement = ""),
+         type = "imputeRoot")
+
+
+importance_long <- rbind(importance_e1_df_long,
+                         importance_ignore_df_long, 
+                         importance_nodes_df_long,
+                         importance_oinroot_df_long,
+                         importance_oio_df_long)
+
+#save(importance_long, file = paste(simulation_path, "/setup1_importance.rda", sep =""))
+
+
 
