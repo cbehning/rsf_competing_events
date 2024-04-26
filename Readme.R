@@ -30,9 +30,10 @@
 # gives detailed information on how to compile ranger and how to run the 
 # training and prediction.
 # prediction results for 1 simulation run are available in the repository and can be
-# extracted using.
-# also, example output to create the illustration figure of G are included here.
+# extracted using
 untar("pred_setup1.tar.gz")
+# also, example output to create the illustration figure of G are included here.
+
 
 # 4. "preprocessing_results.R"
 # contains all processing steps to gather simulation results in the required format

@@ -347,7 +347,7 @@ if(setup == "setup1" ){
     xlab("Time")+
     theme_bw()
   
-  ggsave(filename = paste(output_prefix, setup, "_Root_Ghat_",example_ID, ".png", sep =""), device = "png", width = 6, height = 5)
+  ggsave(filename = paste(output_prefix, setup, "_Root_Ghat.png", sep =""), device = "png", width = 6, height = 5)
   
   ghat_nodes_long <- ghat_nodes %>%
     mutate(treeID = paste(treeID, nodeID) ) %>%
