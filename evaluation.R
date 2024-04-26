@@ -110,7 +110,7 @@ ggsave(filename = paste(output_prefix, setup,"_1000_status_frequencies.png", sep
        device = "png", width = 10, height = 7)
 
 #### Figure: Estimated CIF with Reference limits ####
-## Creates Figure S3 or S4 of the manuscript, depending on the choice of setup
+## Creates Figure S6 or S7 of the manuscript, depending on the choice of setup
 
 # calculate width of reference bands for 1000 repeats
 rep <- repeats+1
@@ -143,7 +143,7 @@ ggsave(filename = paste(output_prefix,setup, "_CIF_CI_",n,"_",rep,"_rep1.png", s
 
 
 #### Figure: Illustration of comparison of C_i and \hat{C}_i ####
-# Creates Figure S5, only created for setup1
+# Creates Figure S3, only created for setup1
 if(setup == "setup1"){
   # can only be computed if data was generated first using data_generation.R
   # with respective, n, k=vars, and seed values
@@ -213,7 +213,7 @@ if(setup == "setup1"){
 
 
 #### Figure: Estimate of G for imputeRoot and imputeNode #####
-# Creates figures S6 and S7
+# Creates figures S4 and S5
 # For one simulation setting (q=0.2, b= 0.85, Steup1), we can show the distribution of 
 # the estimated censoring suvival functions.
 # The output has been flushed from the ranger console output.
