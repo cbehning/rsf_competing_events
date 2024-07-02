@@ -587,3 +587,124 @@ for(type_ in names(type_colors2)){
   ggsave(p, filename = paste(output_prefix, setup,"_1000_VIMP_",type_, ".png", sep =""), device = "png", width = 10, height = 7)
 }
 
+
+#### Figures: Application on GCKD data #####
+# Original GCKD data cannot be provided.
+# Nevertheless, the summary statistics used to create the graphs can be loaded.
+# To perform analyses on synthetic data of a subset of the gckd data
+# resulting in slightly differing results, please see application.R
+
+# load summary data
+untar("gckd_orignal_summary.tar.gz")
+load("gckd_orignal_summary.rda")
+
+# Figure 4: CIF and 10 most important variables
+
+# Plot 4a: CIF
+p <- gckd_cif %>%
+  mutate(type = ifelse(type %in% "Naive", "Naive approach", type )) %>%
+  mutate(time = as.numeric(time) ) %>% 
+  ggplot(aes(x = time, y =  mean_cif, color = type)) +
+  geom_step( linewidth = 1.00,  alpha = 0.9) +
+  ylab("CIF")+
+  xlim(c(0,7))+
+  scale_color_manual(values = type_colors, name = NULL)+
+  theme_bw()+
+  theme(legend.position = "bottom",
+        text = element_text(size = 11))
+
+p_4a <- p + theme(legend.position = c(0.2, 0.85))
+
+# create subset for 10 most important vars
+tmp7 <- 
+  gckd_imp %>%
+  mutate(column = column_pretty) %>% 
+  group_by(column, type) %>% 
+  summarise(VIMP = mean(VIMP,na.rm = TRUE)) %>%
+  group_by(type) %>% 
+  arrange(desc(VIMP)) %>% 
+  slice(1:10) %>%
+  ungroup() %>% 
+  mutate( column_o = factor(paste0(column, "__", type)) %>%  fct_reorder(VIMP) ) %>%
+  data.frame() 
+
+p <- gckd_imp %>%
+  mutate(column = column_pretty) %>% 
+  group_by(column, type) %>% 
+  summarise(VIMP = mean(VIMP,na.rm = TRUE)) %>%
+  group_by(type) %>% 
+  arrange(desc(VIMP)) %>% 
+  slice(1:10) %>%
+  ungroup() %>% 
+  mutate( column_o = factor(paste0(column, "__", type)) %>%  fct_reorder(VIMP) ) %>%
+  data.frame() %>% 
+  ggplot(aes(x = column_o, y = VIMP, fill = type))+
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.8)+
+  scale_fill_manual(values = type_colors, name = NULL)+
+  scale_x_discrete(name=NULL, labels=function(x) gsub('__(.*)$', '', x)) +
+  ylab("Mean permutation VIMP")+
+  xlab("Variables selected")+
+  facet_wrap(~type, nrow = 2, scales = "free")+
+  coord_flip()+
+  theme_bw()+
+  theme(legend.position = "none", text = element_text(size = 11))
+
+# prettier appearance
+p_4b <- p+ scale_y_continuous(n.breaks = 3, expand = c(0, 0))+
+  shadowtext::geom_shadowtext(
+    data = subset(tmp7, VIMP < 0.0025) %>% 
+      mutate(labels = gsub('__(.*)$', '', column_o)),
+    aes(y = VIMP, x = column_o, label = labels),
+    hjust = 0,
+    colour = "black",
+    bg.colour = "white",
+    bg.r = 0.2,
+    size = 3
+  ) + 
+  geom_text(
+    data = subset(tmp7, VIMP >= 0.0025)%>% 
+      mutate(labels = gsub('__(.*)$', '', column_o)),
+    aes(y =0, x = column_o, label = labels),
+    hjust = 0,
+    colour = "black",
+    size = 3
+  )+
+  theme(
+    # Remove tick marks by setting their length to 0
+    axis.ticks.length = unit(0, "mm"),
+    # Remove labels from the vertical axis
+    axis.text.y = element_blank(),
+    plot.margin = margin(t = 5,  # Top margin
+                         r = 10,  # Right margin
+                         b = 10,  # Bottom margin
+                         l = 30) # Left margin
+    
+  ) 
+
+# combine (A) an (B) plot
+ggsave(cowplot::plot_grid(p_4a, p_4b, labels = c('A', 'B'))
+       , filename = paste(gckd_path, "gckd_CIF_VIMP_4_d7.png", sep =""), device = "png", width = 10, height = 7)
+
+
+#### Table: GCKD VIMP of all covariates ####
+# Create Table S12: variable importance of all 38 covariates
+gckd_imp %>%
+  mutate(column = column_pretty) %>% 
+  group_by(column, type) %>% 
+  summarise(VIMP = mean(VIMP,na.rm = TRUE)) %>%
+  group_by(type) %>% 
+  arrange(desc(VIMP)) %>% 
+  pivot_wider(names_from = type, values_from = VIMP) %>%
+  kableExtra::kable(caption = "Variable importance computed via local (casewise) imputation (ranger impmeasure = 6)",
+                    digits = 6, format = "latex") %>%
+  kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
+
+
+#### Table: 10-fold imputation on GCKD ####
+# Create Table S11: Estimated CIF on multiple imputation runs using impute once
+pooled_10 %>%
+  kableExtra::kable(caption = "Pooled CIF of 10 imputations",
+                    digits = 4) %>% # add , format = "latex" to get latex table
+  kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE)
+
+

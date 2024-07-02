@@ -10,7 +10,7 @@
 ##############################################################################
 
 
-# The following contains R-code to preporcess result data, and will create the
+# The following contains R-code to preprocess result data, and will create the
 # data loaded with 
 
 # load(paste(setup,"_results_data.rda", sep =  ""))
