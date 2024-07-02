@@ -45,9 +45,17 @@ untar("pred_setup1.tar.gz")
 #"<setup>_importance.rda" contains all VIMP measures.
 #"<setup>_results_data.rda" contains summary statistics needed to create all figure and tables
 
-# "5. evaluation.R"
+# 5. "evaluation.R"
 # created all figures and tables of the simulation results as presented in the manuscript
 # or the supplement
+# created figures and tables of application of RSF methods on GCKD data
+
+# 6. application.R
+# generate data, intruction to train and predict and preprocess results using a
+# synthetic data subset of the gckd data.
+# for evaluation, summary measures of the original data are provided and loaded in evaluation.R
+# Please note, that the synthetic data loaded here will only produce similar, but not
+# identical results as the original GCKD data
 
 
 
