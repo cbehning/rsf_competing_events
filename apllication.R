@@ -20,89 +20,13 @@
 # Please note, that the synthtic dataset does not lead to the same results as 
 # withthe orginal data provided in the paper.
 
-#### Not run ####
-# create synthetic data. ! Original data is not provided, running not possible
-# 
+ 
 library(tidyverse)
-# library(synthpop)
+require(kabeExtra)
+
 # #load required functions
 source("functions_data_generating.R")
-#
-## inread original data as original
-# original <- read.csv(file = <path to original data>, header = TRUE, sep = ",")
-# 
-# # define rules to ensure consistency
-# rules.list <- list(
-#   p_renal = "fuehrende_nierenerkr == 1",
-#   acute_fail = "fuehrende_nierenerkr == 2",
-#   other = "fuehrende_nierenerkr == 3",
-#   diab_neph = "fuehrende_nierenerkr == 4", 
-#   single_kidney = "fuehrende_nierenerkr == 5",
-#   hereditary = "fuehrende_nierenerkr == 6", 
-#   int_neph = "fuehrende_nierenerkr == 7", 
-#   pr_glom_path = "fuehrende_nierenerkr == 9",
-#   hyp_neph = "fuehrende_nierenerkr == 11",
-#   unknown = "fuehrende_nierenerkr ==1",
-#   unknown = "fuehrende_nierenerkr ==2",
-#   unknown = "fuehrende_nierenerkr ==3",
-#   unknown = "fuehrende_nierenerkr ==4",
-#   unknown = "fuehrende_nierenerkr ==5",
-#   unknown = "fuehrende_nierenerkr ==6",
-#   unknown = "fuehrende_nierenerkr ==7",
-#   unknown = "fuehrende_nierenerkr ==9",
-#   unknown = "fuehrende_nierenerkr ==10",
-#   unknown = "fuehrende_nierenerkr ==11")# unknown = "fuehrende_nierenerkr ==1 ,2,3,4,5,6,7,9,10,11)"),
-# rules.value.list <- list(
-#   p_renal = 1, 
-#   acute_fail = 1, 
-#   other = 1, 
-#   diab_neph = 1, 
-#   single_kidney = 1,
-#   hereditary = 1,
-#   int_neph = 1,
-#   pr_glom_path = 1,
-#   hyp_neph = 1,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0,
-#   unknown = 0
-# )
-# 
-# 
-# synth.obj <- synthpop::syn(original, #cont.na = cont.na.list, 
-#                            rules = rules.list, rvalues = rules.value.list, seed = 28062024)
-# 
-# synth.obj$syn$e1 <-  (synth.obj$syn$status == 1) *1.0
-# synth.obj$syn$e2 <- (synth.obj$syn$status > 1) *1.0
-# 
-# original$e1 <-  (original$status == 1) *1.0
-# original$e2 <- (original$status > 1) *1.0
-# 
-#
-# ## Sample IDs to create a subset of synthetic data using n=2000 rows/subjects.
-# set.seed(01072024)
-# sample_ids <- sample(size = 2000, x = nrow(synth.obj$syn), replace = FALSE)
-# 
-# 
-# ### create impute once data
-# syn_gckd_oio <- DRSA_createSampledRawOutput21(dataS = synth.obj$syn[sample_ids, ],
-#                                                eventCols = c("e1", "e2"), eoi = "e1", timeCol = "time", seed2 = 081123)
-# # new status
-# syn_gckd_oio$status <- as.numeric(syn_gckd_oio[, "e1"] == 1)
-# # drop columns
-# syn_gckd_oio[, c("subDistWeights", "v_samplegew", "y", "eventCols", "time")] <- NULL
-# # rename
-# syn_gckd_oio <- syn_gckd_oio %>%  rename(time = timeInt) %>% arrange(obj) %>% data.frame()
-# # remove e1, e2 abd obj
-# syn_gckd_oio[,c("obj", "e1", "e2", "subDistWeights", "v_samplegew", "y")] <- NULL
-#
-#
+
 
 load("syn_gckd.rda")
 # create paths
@@ -281,7 +205,7 @@ for(seed2 in 101:110){
 ###    found  at evaluation.r                                              ###
 ##############################################################################
 
-# set to true, if the ranger code was run as indicated above.
+# set to TRUE, if the ranger code was run as indicated above.
 # If no .importance and .prediction files are available at
 # synthetic_gckd/results, the code cannot be executed
 if(FALSE){
@@ -448,7 +372,7 @@ ggsave(cowplot::plot_grid(p1, p2, labels = c('A', 'B'))
 }
 
 # Results of 10 fold imputation
-# set to true, if the ranger code was run as indicated above.
+# set to TRUE, if the ranger code was run as indicated above.
 # If no .importance and .prediction files are available at
 # synthetic_gckd/results_10, the code cannot be executed
 if(FALSE){
@@ -505,7 +429,7 @@ if(FALSE){
     arrange(time) %>% 
     data.frame() %>% 
     rowwise() %>%
-    mutate(pooled = mean(c_across(c( X101, X102, X103, X104, X105, X106, X107, X108,,X109,X110)))
+    mutate(pooled = mean(c_across(c( X101, X102, X103, X104, X105, X106, X107, X108, X109, X110)))
     )
   
   pooled10 %>%
