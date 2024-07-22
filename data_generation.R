@@ -40,7 +40,7 @@ scenario <- ifelse(setup == "setup1", "231121",
                           "please chose setup1 or setup2"))
 
 # set a seed
-seed_start <-71123
+seed_start <- 71123
 # set number of repeats
 repeats <- 1-1 # Warning: if set to 1000 for original analysis will create ~ 20GB of data (~14MB per repeat)
 
