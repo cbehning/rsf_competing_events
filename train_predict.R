@@ -110,3 +110,173 @@
 # run:
 # $ranger_exe --predict $forest_file --file $test_file --outprefix $pred_name
 
+
+
+
+# To run individual simulation run from command line from R without bash scripts, use the following code
+
+# set path to ranger installation
+ranger_exe <- "C:/Users/behning/CLionProjects/ranger/cpp_version/test/cmake-build-relwithdebinfo/ranger_build/ranger.exe"
+
+# to check if calling ranger works from your system try:
+system(paste(ranger_exe, "--help"))
+
+prediction_results_path <- paste("tmp_pred_", setup, sep = "") # change from "tmp_pred" to "pred_" if this data should be used in the following scripts
+dir.create(prediction_results_path, showWarnings = FALSE)
+dir.create(paste(prediction_results_path, "/n_", n, sep = ""), showWarnings = FALSE)
+dir.create(paste(prediction_results_path, "/imp2", n, sep = ""), showWarnings = FALSE)
+
+# All parameters were set previously in data_generation.R
+for(i in c(seed_start:(seed_start+repeats))){ # single seed for single simulation run
+  for(p in p_vector){
+    for(b in p_vector){
+      ###################
+      #### Reference ####
+      ###################
+      # names for input and output data, use data with true simulated e1 rate as reference
+      INPUT_FILE <- paste(path_prefix,"/", i,"/data_e1_train_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path,"/n_",n, "/crsubdist_e1_",gsub(p, pattern = "\\.", replacement = ""),
+                        "_",b,"_",i,"_", n, sep ="") 
+      # names for forest file
+      forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
+      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
+      # Names for prediction files
+      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_e1_", gsub(p, pattern = "\\.", replacement = ""),
+                        "_",b,"_",i,"_", n, sep ="")
+      filename_prediction <- paste(pred_name, ".prediction", sep ="")
+      test_file <- paste(path_prefix,"/", i,"/data_test_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+    
+      
+      train_call <- paste(ranger_exe, "--file",INPUT_FILE,
+                          "--treetype 5 --depvarname time --statusvarname status --impmeasure 2 --write --seed 20231107 --outprefix", OUTPUT_FILE)
+      pred_call <- paste(ranger_exe, "--predict ",forest_file," --file ", test_file, "--outprefix", pred_name)
+      
+      # Train the forest
+      system(train_call,  show.output.on.console = TRUE)
+      #Predict the forest
+      system(pred_call, show.output.on.console = TRUE)
+      
+      system(paste("rm", forest_file))
+      
+      ###################
+      ####   Naive   ####
+      ###################
+      # uses data with competing event time as censoring time 
+      INPUT_FILE <- paste(path_prefix,"/", i,"/data_train_ignore_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_ignore_",gsub(p, pattern = "\\.", replacement = ""),
+                        "_",b,"_",i,"_", n, sep ="")
+      forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
+      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
+      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_ignore_", gsub(p, pattern = "\\.", replacement = ""),
+                         "_",b,"_",i,"_", n, sep ="")
+      filename_prediction <- paste(pred_name, ".prediction", sep ="")
+      # uses same test data as above
+      
+      train_call <- paste(ranger_exe, "--file", INPUT_FILE,
+                          "--treetype 5 --depvarname time --statusvarname status --impmeasure 2 --write --seed 20231107 --outprefix", OUTPUT_FILE)
+      pred_call <- paste(ranger_exe, "--predict ",forest_file," --file ", test_file, "--outprefix", pred_name)
+      
+      # Train the forest
+      system(train_call,  show.output.on.console = TRUE)
+      #Predict the forest
+      system(pred_call, show.output.on.console = TRUE)
+      system(paste("rm", forest_file))
+      
+      #####################
+      #### imputeNodes ####
+      #####################
+      # uses original data but imputes within the tree 
+      INPUT_FILE <- paste(path_prefix,"/", i,"/data_train_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_",gsub(p, pattern = "\\.", replacement = ""),
+                           "_",b,"_",i,"_", n, sep ="")
+      forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
+      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
+      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_", gsub(p, pattern = "\\.", replacement = ""),
+                         "_",b,"_",i,"_", n, sep ="")
+      filename_prediction <- paste(pred_name, ".prediction", sep ="")
+      # same test data as above
+
+      # build model
+      train_call <- paste(ranger_exe, "--file", INPUT_FILE,
+                          "--treetype 5 --depvarname time --statusvarname status --impmeasure 2 --write --seed 20231107 --crimputesubdist --outprefix", OUTPUT_FILE)
+      pred_call <- paste(ranger_exe, "--predict ",forest_file," --file ", test_file, "--outprefix", pred_name)
+      
+      # Train the forest
+      system(train_call,  show.output.on.console = TRUE)
+      #Predict the forest
+      system(pred_call, show.output.on.console = TRUE)
+      system(paste("rm", forest_file))
+      
+      ####################
+      #### imputeRoot ####
+      ####################
+      # uses same input file as imputeNodes
+      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_oinroot_",gsub(p, pattern = "\\.", replacement = ""),
+                           "_",b,"_",i,"_", n, sep ="")
+      forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
+      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
+      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_oinroot_", gsub(p, pattern = "\\.", replacement = ""),
+                         "_",b,"_",i,"_", n, sep ="")
+      filename_prediction <- paste(pred_name, ".prediction", sep ="")
+      # same test data as above
+     
+      # build model
+      train_call <- paste(ranger_exe, "--file", INPUT_FILE,
+                          "--treetype 5 --depvarname time --statusvarname status --impmeasure 2 --write --seed 20231107 --crimputesubdist --crimputesubdistonlyinroot --outprefix", OUTPUT_FILE)
+      pred_call <- paste(ranger_exe, "--predict ",forest_file," --file ", test_file, "--outprefix", pred_name)
+      
+      # Train the forest
+      system(train_call,  show.output.on.console = TRUE)
+      #Predict the forest
+      system(pred_call, show.output.on.console = TRUE)
+      system(paste("rm", forest_file))
+      
+      
+      ####################
+      #### imputeOnce ####
+      ####################  
+      # Uses input data that uses previpusly imputed Censoring times
+      INPUT_FILE <- paste(path_prefix,"/", i,"/data_train_oio_",p,"_", b,"_",i,"_",n,"_",vars,"_k.csv", sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_oio_",gsub(p, pattern = "\\.", replacement = ""),
+                           "_",b,"_",i,"_", n, sep ="")
+      forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
+      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
+      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_oio_", gsub(p, pattern = "\\.", replacement = ""),
+                         "_",b,"_",i,"_", n, sep ="")
+      filename_prediction <- paste(pred_name, ".prediction", sep ="")
+      # same test data as above
+      
+      # build model
+      train_call <- paste(ranger_exe, "--file", INPUT_FILE,
+                          "--treetype 5 --depvarname time --statusvarname status --impmeasure 2 --write --seed 20231107 --outprefix", OUTPUT_FILE)
+      pred_call <- paste(ranger_exe, "--predict ",forest_file," --file ", test_file, "--outprefix", pred_name)
+      
+      # Train the forest
+      system(train_call,  show.output.on.console = TRUE)
+      #Predict the forest
+      system(pred_call, show.output.on.console = TRUE)
+      system(paste("rm", forest_file))
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
