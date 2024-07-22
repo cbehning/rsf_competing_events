@@ -753,7 +753,7 @@ p_4b <- p+ scale_y_continuous(n.breaks = 3, expand = c(0, 0))+
 
 # combine (A) an (B) plot
 ggsave(cowplot::plot_grid(p_4a, p_4b, labels = c('A', 'B'))
-       , filename = paste(gckd_path, "Figure_4.png", sep =""), device = "png", width = 10, height = 7)
+       , filename = paste(output_prefix, "Figure_4.png", sep =""), device = "png", width = 10, height = 7)
 
 #### Table: 10-fold imputation on GCKD ####
 # Create Table S11: Estimated CIF on multiple imputation runs using impute once
@@ -773,7 +773,7 @@ gckd_imp %>%
   arrange(desc(VIMP)) %>% 
   pivot_wider(names_from = type, values_from = VIMP) %>%
   kableExtra::kable(caption = "Table S12: Variable importance computed via local (casewise) imputation (ranger impmeasure = 6)",
-                    digits = 6, format = "latex") %>%
+                    digits = 6) %>% # add , format = "latex"
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
 
 
