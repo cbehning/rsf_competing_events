@@ -79,8 +79,15 @@ all_data1000 %>%
   theme(legend.position = "bottom",
         text = element_text(size = 18))
 
-ggsave(filename = paste(output_prefix, setup, "CIF_plot_",n,"_", (repeats+1),"rep.png", sep = ""),
-       device = "png", width = 10, height = 7)
+if(setup == "setup1"){
+  ggsave(filename = paste(output_prefix, "Figure_2.png", sep = ""),
+         device = "png", width = 10, height = 7)
+  
+}else if(setup == "setup2"){
+  ggsave(filename = paste(output_prefix, "Figure_3.png", sep = ""),
+         device = "png", width = 10, height = 7)
+  
+}
 
 
 
@@ -106,8 +113,17 @@ status_raw_data_df %>%
   theme_bw()+
   theme( text = element_text(size = 18))
 
-ggsave(filename = paste(output_prefix, setup,"_1000_status_frequencies.png", sep =""),
-       device = "png", width = 10, height = 7)
+if(setup == "setup1"){
+  ggsave(filename = paste(output_prefix,"Figure_S1.png", sep =""),
+         device = "png", width = 10, height = 7)
+  
+}else if(setup == "setup2"){
+  ggsave(filename = paste(output_prefix, "Figure_S2.png", sep =""),
+         device = "png", width = 10, height = 7)
+  
+}
+
+
 
 #### Figure: Estimated CIF with Reference limits ####
 ## Creates Figure S6 or S7 of the manuscript, depending on the choice of setup
@@ -138,8 +154,17 @@ all_data1000_2 %>%
   theme(legend.position = "bottom",
         text = element_text(size = 18))
 
-ggsave(filename = paste(output_prefix,setup, "_CIF_CI_",n,"_",rep,"_rep1.png", sep = ""), 
-       device = "png", width = 10, height = 7)
+if(setup == "setup1"){
+  ggsave(filename = paste(output_prefix, "Figure_S6.png", sep = ""), 
+         device = "png", width = 10, height = 7)
+  
+}else if(setup == "setup2"){
+  ggsave(filename = paste(output_prefix, "Figure_S7.png", sep = ""), 
+         device = "png", width = 10, height = 7)
+  
+}
+
+
 
 
 #### Figure: Illustration of comparison of C_i and \hat{C}_i ####
@@ -206,7 +231,7 @@ if(setup == "setup1"){
     theme(legend.position = "bottom",
           text = element_text(size = 18))
   
-  ggsave(filename = paste(output_prefix, setup, "_Cens_",n,"_",rep,"_71123.png", sep = ""),
+  ggsave(filename = paste(output_prefix, "Figure_S3.png", sep = ""),
          device = "png", width = 10, height = 7)
   
 }
@@ -347,7 +372,7 @@ if(setup == "setup1" ){
     xlab("Time")+
     theme_bw()
   
-  ggsave(filename = paste(output_prefix, setup, "_Root_Ghat.png", sep =""), device = "png", width = 6, height = 5)
+  ggsave(filename = paste(output_prefix, "Figure_S4.png", sep =""), device = "png", width = 6, height = 5)
   
   ghat_nodes_long <- ghat_nodes %>%
     mutate(treeID = paste(treeID, nodeID) ) %>%
@@ -367,12 +392,18 @@ if(setup == "setup1" ){
     xlab("Time")+
     theme_bw()
   
-  ggsave(filename = paste(output_prefix, setup, "_Node_Ghat", ".png", sep =""), device = "png", width = 6, height = 5)
+  ggsave(filename = paste(output_prefix, "Figure_S5.png", sep =""), device = "png", width = 6, height = 5)
 }
 
 
 #### Table: C-Index ####
 require(kableExtra)
+
+if(setup == "setup1"){
+  caption_title <- "Table S1: Mean (SD) C-index values computed via cIndex in the discSurv Package."
+}else if(setup == "setup2"){
+  caption_title <- "Table S2: Mean (SD) C-index values computed via cIndex in the discSurv Package."
+}
 
 cindex_df %>%
   left_join(mapping_method_type, by = "method") %>%
@@ -382,7 +413,7 @@ cindex_df %>%
   mutate(q = paste("0.", q, sep = "")) %>%
   summarise(mean_c_index = paste( sprintf(mean(cindex, na.rm = TRUE),fmt = "%.4f"), " (", sprintf(sd(cindex, na.rm = TRUE),fmt = "%.3f"), ")", sep = "" )) %>%
   pivot_wider(names_from = type, values_from = mean_c_index) %>%
-  kableExtra::kable(caption = "Mean (SD) C-index values computed via cIndexin the discSurv Package.",
+  kableExtra::kable(caption = caption_title,
                     digits = 4) %>% # add format = "latex"
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
 
@@ -390,6 +421,7 @@ cindex_df %>%
 #### Figure: Monte Carlo Error Mean C-Index on 10 batches ####
 # compute mean c-index for every 100 simulation runs
 # compute  standard deviation of resulting 10 means
+
 mc_cindex_100_10 <- cindex_df %>% 
   mutate(mcrep = (seed-seed_start) %% 10 ) %>% # form groups
   left_join(mapping_method_type, by = "method") %>%
@@ -422,7 +454,16 @@ mc_cindex_100_10 %>%
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
 
-ggsave(filename = paste(output_prefix,set_up, "_C-index_MCE_",n,"_",repeats+1,"rep.png", sep = ""), device = "png", width = 10, height = 7)  
+
+if(setup == "setup1"){
+  ggsave(filename = paste(output_prefix, "Figure_S8.png", sep = ""),
+         device = "png", width = 10, height = 7)  
+}else if(setup == "setup2"){
+  ggsave(filename = paste(output_prefix,"Figure_S10.png", sep = ""),
+         device = "png", width = 10, height = 7)  
+}
+
+
 
 #### Figure: Monte Carlo Error SD C-Index on 10 batches ####
 # compute sd of c-index for every 100 simulation runs
@@ -461,10 +502,25 @@ mc_cindex_sd_100_10 %>%
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
 
-ggsave(filename = paste(output_prefix,setup, "_C-index_SD_MCE",n,"_",repeats+1,"rep.png", sep = ""), device = "png", width = 10, height = 7)  
+if(setup == "setup1"){
+  ggsave(filename = paste(output_prefix, "Figure_S9.png", sep = ""),
+         device = "png", width = 10, height = 7)  
+}else if(setup == "setup2"){
+  ggsave(filename = paste(output_prefix,"Figure_S11.png", sep = ""),
+         device = "png", width = 10, height = 7)  
+}
+
 
 
 #### Table: Integrated Brier Score ####
+
+if(setup == "setup1"){
+  caption_title <- "Table S3: Mean (SD) integrated Brier score (IBS)  calculated via the pec package."
+}else if(setup == "setup2"){
+  caption_title <- "Table S4:Mean (SD) integrated Brier score (IBS)  calculated via the pec package."
+}
+
+
 bierscore_df %>%
   left_join(mapping_method_type, by = "method") %>%
   mutate(type = factor(type, levels = c("imputeNode", "imputeRoot", "imputeOnce", "Naive approach", "Reference"))) %>% 
@@ -473,7 +529,7 @@ bierscore_df %>%
   mutate(q = paste("0.", q, sep = "")) %>%
   summarise(mean_c_index = paste( sprintf(mean(IBS, na.rm = TRUE),fmt = "%.4f"), " (", sprintf(sd(IBS, na.rm = TRUE),fmt = "%.4f"), ")", sep = "" )) %>%
   pivot_wider(names_from = type, values_from = mean_c_index) %>%
-  kableExtra::kable(caption = "Mean (SD) integrated Brier score (IBS)  calculated via the pec package.",
+  kableExtra::kable(caption = caption_title,
                     digits = 4) %>% # add  format = "latex"
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
 
@@ -513,7 +569,14 @@ mc_bs_100_10 %>%
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
 
-ggsave(filename = paste(output_prefix, setup, "_C-index_IBS_",n,"_",repeats+1,"rep.png", sep = ""), device = "png", width = 10, height = 7)  
+
+if(setup == "setup1"){
+  ggsave(filename = paste(output_prefix, "Figure_S12.png", sep = ""), device = "png", width = 10, height = 7)  
+}else if(setup == "setup2"){
+  ggsave(filename = paste(output_prefix, "Figure_S14.png", sep = ""), device = "png", width = 10, height = 7)  
+}
+
+
 
 
 #### Figure: Monte Carlo Error SD IBS on 10 batches ####
@@ -553,14 +616,19 @@ mc_bs_sd_100_10 %>%
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
 
-ggsave(filename = paste(output_prefix,setup, "_C-index_SD_IBS",n,"_",repeats+1,"rep.png", sep = ""), device = "png", width = 10, height = 7) 
+if(setup == "setup1"){
+  ggsave(filename = paste(output_prefix, "Figure_S13.png", sep = ""), device = "png", width = 10, height = 7)  
+}else if(setup == "setup2"){
+  ggsave(filename = paste(output_prefix, "Figure_S15.png", sep = ""), device = "png", width = 10, height = 7)  
+}
 
 
 #### Figures: Variable Importance #####
 # Plot 10 most important variables
-# Creates Figures S16-S20 or S21-S25, dependeing on the setup 
+# Creates Figures S16-S20 or S21-S25, depending on the setup 
 
 load("setup1_importance.rda" )
+approach_names <- c("Reference", "Naive approach", "imputeOnce", "imputeRoot", "imputeNode")
 
 for(type_ in names(type_colors2)){
   p <- importance_long %>% ungroup() %>%
@@ -584,9 +652,11 @@ for(type_ in names(type_colors2)){
     theme_bw()+
     theme(legend.position = "none", text = element_text(size = 11))
   
-  ggsave(p, filename = paste(output_prefix, setup,"_1000_VIMP_",type_, ".png", sep =""), device = "png", width = 10, height = 7)
+  figno <- 15 + which(approach_names == type_) + (setup=="setup2")*5
+  
+  ggsave(p, filename = paste(output_prefix, "Figure_S", figno ,".png", sep =""), device = "png", width = 10, height = 7)
 }
-
+rm(figno)
 
 #### Figures: Application on GCKD data #####
 # Original GCKD data cannot be provided.
@@ -683,7 +753,14 @@ p_4b <- p+ scale_y_continuous(n.breaks = 3, expand = c(0, 0))+
 
 # combine (A) an (B) plot
 ggsave(cowplot::plot_grid(p_4a, p_4b, labels = c('A', 'B'))
-       , filename = paste(gckd_path, "gckd_CIF_VIMP_4_d7.png", sep =""), device = "png", width = 10, height = 7)
+       , filename = paste(gckd_path, "Figure_4.png", sep =""), device = "png", width = 10, height = 7)
+
+#### Table: 10-fold imputation on GCKD ####
+# Create Table S11: Estimated CIF on multiple imputation runs using impute once
+pooled_10 %>%
+  kableExtra::kable(caption = "Table S11: Pooled CIF of 10 imputations",
+                    digits = 4) %>% # add , format = "latex" to get latex table
+  kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE)
 
 
 #### Table: GCKD VIMP of all covariates ####
@@ -695,16 +772,11 @@ gckd_imp %>%
   group_by(type) %>% 
   arrange(desc(VIMP)) %>% 
   pivot_wider(names_from = type, values_from = VIMP) %>%
-  kableExtra::kable(caption = "Variable importance computed via local (casewise) imputation (ranger impmeasure = 6)",
+  kableExtra::kable(caption = "Table S12: Variable importance computed via local (casewise) imputation (ranger impmeasure = 6)",
                     digits = 6, format = "latex") %>%
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
 
 
-#### Table: 10-fold imputation on GCKD ####
-# Create Table S11: Estimated CIF on multiple imputation runs using impute once
-pooled_10 %>%
-  kableExtra::kable(caption = "Pooled CIF of 10 imputations",
-                    digits = 4) %>% # add , format = "latex" to get latex table
-  kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE)
+
 
 
