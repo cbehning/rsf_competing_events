@@ -48,6 +48,9 @@ repeats <- 1-1 # Warning: if set to 1000 for original analysis will create ~ 20G
 p_vector <- c(0.2, 0.4, 0.8)
 # possible values for parameter affecting censporing rate
 b_vector <- c(0.85, 1, 1.25)
+# Number of subjects (rows)
+n <- 1000
+vars <- 50
 
 # set path to store data
 path_prefix <- file.path(paste("data_", setup, sep =""), fsep = .Platform$file.sep)

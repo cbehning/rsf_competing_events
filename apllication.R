@@ -10,15 +10,15 @@
 ##############################################################################
 
 
-# The following contains R-Code to create results for a sythetic simulation 
+# The following contains R-Code to create results for a synthetic simulation 
 # data set.
 # 
-# Please note: due to data protection contraints, the original appication data
+# Please note: due to data protection constraints, the original application data
 # set could not be provided in this repository. Therefore, we created a 
 # synthetic dataset using the synthpop package and function syn.
 # After creating the synthetic dataset, we used a subset of n=2000 row.
 # Please note, that the synthtic dataset does not lead to the same results as 
-# withthe orginal data provided in the paper.
+# with the orginal data provided in the paper.
 
  
 library(tidyverse)
@@ -27,8 +27,15 @@ require(kabeExtra)
 # #load required functions
 source("functions_data_generating.R")
 
-
+#########################
+#### data generation ####
+#########################
+# load synthetic data
 load("syn_gckd.rda")
+
+## Generate Training data in the correct format for 
+# the methods: imputeOnce, imputeNode, imputeRoot and Reference.
+
 # create paths
 gckd_path <- "synthetic_gckd" 
 dir.create(gckd_path, showWarnings = FALSE)
@@ -49,6 +56,7 @@ write.table(syn_gckd, #synth.obj$syn[sample_ids, ] %>% select(-e1, -e2)
 syn_gckd$e1 <-  (syn_gckd$status == 1) *1.0
 syn_gckd$e2 <- (syn_gckd$status > 1) *1.0
 
+## Create multiple imputation of imputeOnce
 # Create imputeOnce data for 10 different seeds
 for(seed2 in 101:110){
   df_sample_syn <- DRSA_createSampledRawOutput21(dataS = syn_gckd,
@@ -70,9 +78,11 @@ for(seed2 in 101:110){
 
 # Run ranger simulations 
 # Use code as illustrated in train_predict.R
-# ranger stand lone needs to be compiled and avlaible at <path to ranger>
+# ranger C++ standalone needs to be compiled and avlaible at <path to ranger>
 # see bash scripts as example to run the 4 different method apporaches:
-# imputeNode, imputeOnce, naive, imputeRoot
+# imputeNode, imputeOnce, Naive, imputeRoot
+
+## Save the following as bash scripts and submit them e.g. with sbatch:
 
 ## ImputeNode
 #
@@ -199,7 +209,7 @@ for(seed2 in 101:110){
 
 ##############################################################################
 ###    To proceed with this code, the above commands need to be run to     ###
-###    generate results in the results folder.                             ###
+###    generate results in the results/ subfolder.                         ###
 ###    Generated results here differ from the original application.        ### 
 ###    Aggregated summarized results and plot + table creation can be      ###
 ###    found  at evaluation.r                                              ###
