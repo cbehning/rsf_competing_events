@@ -20,7 +20,7 @@
 # Please note, that the synthtic dataset does not lead to the same results as 
 # with the orginal data provided in the paper.
 
- 
+
 library(tidyverse)
 require(kabeExtra)
 
@@ -330,7 +330,7 @@ if(FALSE){
     coord_flip()+
     theme_bw()+
     theme(legend.position = "none", text = element_text(size = 11))
-
+  
   tmp7 <- 
     gckd_imp_mean_df_long %>%
     group_by(column, type) %>% 
@@ -342,43 +342,43 @@ if(FALSE){
     mutate( column_o = factor(paste0(column, "__", type)) %>%  fct_reorder(VIMP) ) %>%
     data.frame() 
   
-
-
-p2 <- p+ scale_y_continuous(n.breaks = 3, expand = c(0, 0))+
-  shadowtext::geom_shadowtext(
-    data = subset(tmp7, VIMP < 0.0025) %>% 
-      mutate(labels = gsub('__(.*)$', '', column_o)),
-    aes(y = VIMP, x = column_o, label = labels),
-    hjust = 0,
-    #nudge_y = 0.002,
-    colour = "black",
-    bg.colour = "white",
-    bg.r = 0.2,
-    size = 3
-  ) + 
-  geom_text(
-    data = subset(tmp7, VIMP >= 0.0025)%>% 
-      mutate(labels = gsub('__(.*)$', '', column_o)),
-    aes(y =0, x = column_o, label = labels),
-    hjust = 0,
-    #nudge_y = 0.003,
-    colour = "black",
-    size = 3
-  )+
-  theme(
-    # Remove tick marks by setting their length to 0
-    axis.ticks.length = unit(0, "mm"),
-    # Remove labels from the vertical axis
-    axis.text.y = element_blank(),
-    plot.margin = margin(t = 5,  # Top margin
-                         r = 10,  # Right margin
-                         b = 10,  # Bottom margin
-                         l = 30) # Left margin
-  ) 
-
-ggsave(cowplot::plot_grid(p1, p2, labels = c('A', 'B'))
-       , filename = paste(gckd_path, "syn_gckd_CIF_VIMP_4_d7.png", sep =.Platform$file.sep), device = "png", width = 10, height = 7)
-
+  
+  
+  p2 <- p+ scale_y_continuous(n.breaks = 3, expand = c(0, 0))+
+    shadowtext::geom_shadowtext(
+      data = subset(tmp7, VIMP < 0.0025) %>% 
+        mutate(labels = gsub('__(.*)$', '', column_o)),
+      aes(y = VIMP, x = column_o, label = labels),
+      hjust = 0,
+      #nudge_y = 0.002,
+      colour = "black",
+      bg.colour = "white",
+      bg.r = 0.2,
+      size = 3
+    ) + 
+    geom_text(
+      data = subset(tmp7, VIMP >= 0.0025)%>% 
+        mutate(labels = gsub('__(.*)$', '', column_o)),
+      aes(y =0, x = column_o, label = labels),
+      hjust = 0,
+      #nudge_y = 0.003,
+      colour = "black",
+      size = 3
+    )+
+    theme(
+      # Remove tick marks by setting their length to 0
+      axis.ticks.length = unit(0, "mm"),
+      # Remove labels from the vertical axis
+      axis.text.y = element_blank(),
+      plot.margin = margin(t = 5,  # Top margin
+                           r = 10,  # Right margin
+                           b = 10,  # Bottom margin
+                           l = 30) # Left margin
+    ) 
+  
+  ggsave(cowplot::plot_grid(p1, p2, labels = c('A', 'B'))
+         , filename = paste(gckd_path, "syn_gckd_CIF_VIMP_4_d7.png", sep =.Platform$file.sep), device = "png", width = 10, height = 7)
+  
 }
 
 # Results of 10 fold imputation
@@ -448,4 +448,75 @@ if(FALSE){
                       digits = 4) %>% # add , format = "latex" to get latex table
     kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE)
 }
+
+# recode into meaningful names
+syn_gckd_recoded <- syn_gckd %>%
+  mutate(across(c(status, incl_criteria, fuehrende_nierenerkr, gender, employment,
+                  dem_famstand, dem_beruf, dem_privat, alcohol, smoking,
+                  chd, stroke, diab_neph, 
+                  aa_schlag2, aa_schmerzmittel, aa_copd, aa_asthma, aa_nierenerk_1,hyp_neph, hypertension, pr_glom_path, systemic,
+                  p_renal, int_neph, acute_fail, single_kidney, hereditary, other, unknown ), 
+                ~as.factor(.)))
+
+# Create Table S5 on synthetic data
+# status 0: Censored, 1: KF, 2: Death
+syn_gckd_recoded %>% select(time, status) %>% table()
+
+# Create Table S6
+table1::table1(~ age +
+                 gender + # Sex - 0:male, 1:female 
+                 alcohol + # 0:low-normal drinking, 1:heavy drinking
+                 smoking + # 0:non smokers, 1:former smokers, 2:smokers 
+                 dem_famstand + # family status - 0:single, 1:married or in a stable partnership, 2:separated or divorced, 3:widowed
+                 aa_geschwist + # number of siblings
+                 dem_anz_pers + # number of people living in the household
+                 employment + # 1:fully employed, 2:part-time, 3:housework, 4:pension, 5:job-seeker, 6:training, 7:other
+                 dem_privat + # private insurance - 0:no, 1:yes
+                 dem_beruf # professional qualification - 1:still in training, 2:apprenticeship, 3:master (craftsperson), 4:university degree, 5:without degree, 6:other, 7:unknown
+               , data = syn_gckd_recoded 
+)
+
+# Create Table S7
+table1::table1(~ incl_criteria + # Study enrollment - 0:proteinuria, 1:low eGFR value
+                 bmi_korr + # BMI
+                 hypertension + # 0:no, 1:yes
+                 chd + # coronary heart disease - 0:no, 1:yes
+                 stroke +  # 0:no, 1:yes
+                 aa_asthma +  # asthma -  1:yes, 2:no, 3:unknown
+                 aa_copd +  # chronic obstructive bronchitis (COPD) - 1:yes, 2:no, 3:unknown
+                 aa_schmerzmittel # taking painkillers - 1:regularly, 2:when required, 3:never, 4: unknown
+               , data = syn_gckd_recoded 
+)
+# Create Table S8
+table1::table1(~ crea_original + # serum creatinine
+                 uacr +
+                 eGFR_CKD_EPI + # eGFR
+                 crpvalue1 + # CRP
+                 ldlvalue1 + # LDL
+                 hdlvalue1, #HDL
+               data = syn_gckd_recoded 
+)
+
+# Create Table S9
+table1::table1(~ aa_schlag2 + # number of siblings with stroke
+                 aa_nierenerk_1 # number of relatives with kidney disease
+               ,data = syn_gckd_recoded 
+)
+# Create Table S10
+table1::table1(~fuehrende_nierenerkr + # leading kindey disease - 1:Obstructive nephropathy, 2: Acute kidney injury, 3:Miscellaneous, 4:Diabetic nephropathy
+                 # 5:Single kidney, 6:Hereditary kidney disease, 7:Interstitial nephropathy, 8:Undetermined, 9:Primary glomerulopathy
+                 # 10:Systemic disease, 11:Vascular nephropathy
+                 hyp_neph + # Vascular nephropathy - 0:no, 1:yes
+                 pr_glom_path + # Primary glomerulopathy - 0:no, 1:yes
+                 diab_neph + # Diabetic nephropathy - 0:no, 1:yes
+                 systemic + # Systemic disease - 0:no, 1:yes
+                 hereditary + #Hereditary kidney disease - 0:no, 1:yes
+                 int_neph + # Interstitial nephropathy - 0:no, 1:yes
+                 single_kidney + # 0:no, 1:yes
+                 p_renal + # Obstructive nephropathy - 0:no, 1:yes
+                 acute_fail + # Acute kidney injury - 0:no, 1:yes
+                 other +  # Miscellaneous - 0:no, 1:yes
+                 unknown # Undetermined - 0:no, 1:yes
+               ,data = syn_gckd_recoded 
+)
 
