@@ -63,6 +63,42 @@ simulation_data_path <- paste(paste("data_", setup,  .Platform$file.sep, sep =""
 #  create subfolder von each n
 simulation_path <- paste("pred_", setup, .Platform$file.sep, sep = "")
 
+###########################################
+# Inread raw files to get event frequencies:
+raw_files <- list.files(simulation_data_path, pattern="^raw_data", full.names=TRUE, recursive = TRUE)
+raw_files <- raw_files[str_detect(raw_files, pattern = n_pattern)]
+raw_event_data <-  lapply(raw_files, read.csv)
+names(raw_event_data) <- gsub(raw_files,
+                              pattern = paste( simulation_data_path, "/", sep = "" ), replacement = "") %>% 
+  gsub(pattern = "_50_k.csv", replacement = "") %>% 
+  gsub(pattern = "^.*/", replacement = "")
+
+status_raw_data <- lapply(raw_event_data, function(x) data.frame(table(x$status)) )
+status_raw_data <- bind_rows(status_raw_data, .id = 'simulation')
+
+# extract information on q, b, n, seed,  from file names
+status_raw_data_df <- status_raw_data %>%
+  mutate( p =  gsub(simulation, pattern = "_[^_]+_p$", replacement = "" ) %>% 
+            gsub(pattern = "_[^_]+$", replacement = "" ) %>%
+            gsub(pattern = "^.*_", replacement = ""),
+          data_seed = gsub(simulation, pattern = "raw_data_", replacement = "" ) %>% 
+            gsub(pattern = "_.*$", replacement = "")
+          ,
+          b = gsub(simulation, pattern = "_p$", replacement = "")%>%
+            gsub(pattern = "^.*_", replacement = ""),
+          n = gsub(simulation, pattern = "raw_data_", replacement = "") %>%
+            gsub(simulation, pattern = "_[^_]+$", replacement = "" ) %>%
+            gsub(simulation, pattern = "_[^_]+$", replacement = "" ) %>%
+            gsub(simulation, pattern = "^.*_", replacement = "" )
+  ) %>% 
+  select(-simulation)
+
+# In case all simulations runs were performed, please include and specify location to store event frequencies:
+# save(status_raw_data_df, 
+#     file = paste(simulation_path, .Platform$file.sep, setup,"_status_freq.rda", sep =""))
+
+#############################
+#### Inread Training Data ####
 
 # read files used to train data
 filenames_p <- list.files(simulation_data_path, pattern="*_k.csv", full.names=TRUE, recursive = TRUE)
@@ -338,8 +374,11 @@ all_data <- rbind(
     mutate(time = as.numeric(time),
            type = "imputeRoot"),
 )
+if(repeats == 999){
+  all_data1000 <- all_data
+}
 
-
+#####################################
 #### Compute C-index ####
 #consider e1 data as true reference data
 
@@ -431,7 +470,8 @@ mapping_method_type  <- data.frame(
   method = c("impute",  "ignore", "oio", "e1", "oiroot"), 
   type =  c( "imputeNode",  "Naive approach", "imputeOnce", "Reference", "imputeRoot" ))
 
-## Tables and graphs for Brier Score
+############################################
+####  Tables and graphs for Brier Score ####
 
 # use package "pec" to compute prediction error curves and Brier Scores
 
@@ -544,6 +584,7 @@ if(TRUE){ # can take long with increasing number of repeats, run once and save d
   bierscore_2 <- paste(simulation_path, "td_brierscore_",n,"_rep1000.csv", sep ="")
 }
 
+#################################
 #### inread importance files ####
 # list all files to check number available
 importance_files_e1 <- list.files(paste(simulation_path, "imp2/Reference/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
@@ -552,7 +593,7 @@ importance_files_ignore <- list.files(paste(simulation_path, "imp2/Naive/", sep 
 importance_files_oio <- list.files(paste(simulation_path, "imp2/imputeOnce/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
 importance_files_oiroot <- list.files(paste(simulation_path, "imp2/imputeRoot/", sep = ""), pattern="*.importance", full.names=TRUE, recursive = TRUE)
 
-# for both events
+# for both events, imputed in nodes
 importance_nodes <-  lapply(importance_files_nodes, FUN = inread_importance_value)
 # ignoring competing events mechanism
 importance_ignore <- lapply(importance_files_ignore, FUN = inread_importance_value)
@@ -664,7 +705,17 @@ importance_long <- rbind(importance_e1_df_long,
                          importance_oinroot_df_long,
                          importance_oio_df_long)
 
-#save(importance_long, file = paste(simulation_path, "/setup1_importance.rda", sep =""))
+# In case all simulations runs were performed, please include:
+#save(importance_long, file = paste(simulation_path, .Platform$file.sep, setup,"_importance.rda", sep =""))
 
 
+# Define further parameters necessary for plotting
+# e1_rate <- data.frame( p = c(0.2, 0.4, 0.8))
+# mapping_method_type  <- data.frame(
+#   method = c("impute",  "ignore", "oio", "e1", "oiroot"), 
+#   type =  c( "imputeNode",  "Naive approach", "imputeOnce", "Reference", "imputeRoot" ))
+
+# In case all simulations runs were performed, please include:
+# save(all_data1000, bierscore_df, cindex_df, e1_rate, mapping_method_type, 
+# file = paste(simulation_path, .Platform$file.sep, setup,"_results_data.rda", sep =""))
 
