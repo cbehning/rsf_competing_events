@@ -9,6 +9,7 @@
 #####                      presented in Section 3                        ##### 
 ##############################################################################
 
+## !! Please install C++ standalone before running the code !! ###
 
 # Training the models and model prediction was not performed in R.
 #
@@ -29,18 +30,17 @@
 
 # To build start a terminal from the ranger main directory and run the following commands
 
- 
 # cd cpp_version
 # mkdir build
 # cd build
 # cmake ..
 # make
  
-
 # After compilation there should be an executable called "ranger" in the build 
 # directory which will be called and needed for running the RSF methods.
 # To compile ranger on our cluster, we needed to run the following bash script:
-   
+# (Please insert <Path to ranger> on your device)   
+
 # #!/bin/bash
 #   
 # module load toolchain/foss/2022a
@@ -116,35 +116,49 @@
 # To run individual simulation run from command line from R without bash scripts, use the following code
 
 # set path to ranger installation
-ranger_exe <- "C:/Users/behning/CLionProjects/ranger/cpp_version/test/cmake-build-relwithdebinfo/ranger_build/ranger.exe"
+# Please replace with your path
+ranger_exe <- "<Please insert your path to your ranger execultable, e.g. on windows: 
+[...]/ranger/cpp_version/test/cmake-build-relwithdebinfo/ranger_build/ranger.exe>"
 
 # to check if calling ranger works from your system try:
 system(paste(ranger_exe, "--help"))
-
+# create paths to store results
 prediction_results_path <- paste("tmp_pred_", setup, sep = "") # change from "tmp_pred" to "pred_" if this data should be used in the following scripts
 dir.create(prediction_results_path, showWarnings = FALSE)
-dir.create(paste(prediction_results_path, "/n_", n, sep = ""), showWarnings = FALSE)
-dir.create(paste(prediction_results_path, "/imp2", n, sep = ""), showWarnings = FALSE)
+dir.create(paste(prediction_results_path, .Platform$file.sep, "n_", n, sep =  ""), showWarnings = FALSE)
+dir.create(paste(prediction_results_path, "imp2", sep =  .Platform$file.sep), showWarnings = FALSE)
+
+for(approach in c("imputeNodes", "imputeOnce", "imputeRoot", "Naive", "Reference")){
+  dir.create(paste(prediction_results_path, "imp2", approach, sep =  .Platform$file.sep), showWarnings = FALSE)  
+}
 
 # All parameters were set previously in data_generation.R
 for(i in c(seed_start:(seed_start+repeats))){ # single seed for single simulation run
   for(p in p_vector){
-    for(b in p_vector){
+    for(b in b_vector){
+      print(paste("Runnung all 5 approaches for: Event rate ~ ", p , "-- Censoring rate",b))
+      
       ###################
       #### Reference ####
       ###################
       # names for input and output data, use data with true simulated e1 rate as reference
-      INPUT_FILE <- paste(path_prefix,"/", i,"/data_e1_train_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
-      OUTPUT_FILE <- paste(prediction_results_path,"/n_",n, "/crsubdist_e1_",gsub(p, pattern = "\\.", replacement = ""),
-                        "_",b,"_",i,"_", n, sep ="") 
-      # names for forest file
+      INPUT_FILE <- paste(path_prefix, .Platform$file.sep, i, .Platform$file.sep,"data_e1_train_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+      suffix <- paste("crsubdist_e1_",gsub(p, pattern = "\\.", replacement = ""), "_",b,"_",i,"_", n, sep ="") 
+      OUTPUT_FILE <- paste(prediction_results_path, .Platform$file.sep, "n_",n, .Platform$file.sep,
+                           suffix,  sep ="") 
+      # names for forest file and importance files
       forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
-      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
-      # Names for prediction files
-      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_e1_", gsub(p, pattern = "\\.", replacement = ""),
+      filename_importance_tmp <- paste(OUTPUT_FILE, ".importance", sep ="")
+      filename_importance <- paste(prediction_results_path, .Platform$file.sep, "imp2", .Platform$file.sep,
+                                   "Reference", .Platform$file.sep,
+                                   suffix,".importance", sep ="")
+      # Names for test file to create prediction on
+      pred_name <- paste(prediction_results_path,.Platform$file.sep, "n_",n, .Platform$file.sep,
+                         "test_crsubdist_e1_", gsub(p, pattern = "\\.", replacement = ""),
                         "_",b,"_",i,"_", n, sep ="")
       filename_prediction <- paste(pred_name, ".prediction", sep ="")
-      test_file <- paste(path_prefix,"/", i,"/data_test_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+      test_file <- paste(path_prefix, .Platform$file.sep, i,.Platform$file.sep,
+                         "data_test_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
     
       
       train_call <- paste(ranger_exe, "--file",INPUT_FILE,
@@ -155,19 +169,29 @@ for(i in c(seed_start:(seed_start+repeats))){ # single seed for single simulatio
       system(train_call,  show.output.on.console = TRUE)
       #Predict the forest
       system(pred_call, show.output.on.console = TRUE)
-      
+      # move and remove
+      system(paste("mv", filename_importance_tmp, filename_importance)) 
       system(paste("rm", forest_file))
+    
       
       ###################
       ####   Naive   ####
       ###################
       # uses data with competing event time as censoring time 
-      INPUT_FILE <- paste(path_prefix,"/", i,"/data_train_ignore_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
-      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_ignore_",gsub(p, pattern = "\\.", replacement = ""),
-                        "_",b,"_",i,"_", n, sep ="")
+      # names for input and putput files
+      INPUT_FILE <- paste(path_prefix, .Platform$file.sep, i,.Platform$file.sep, 
+                          "data_train_ignore_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+      suffix <- paste("crsubdist_ignore_",gsub(p, pattern = "\\.", replacement = ""),  "_",b,"_",i,"_", n, sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path,.Platform$file.sep, "n_", n, .Platform$file.sep, 
+                           suffix, sep ="")
       forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
-      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
-      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_ignore_", gsub(p, pattern = "\\.", replacement = ""),
+      # names to move importance files
+      filename_importance_tmp <- paste(OUTPUT_FILE,".importance", sep ="")
+      filename_importance <- paste(prediction_results_path, .Platform$file.sep, "imp2", .Platform$file.sep,
+                                   "Naive", .Platform$file.sep,
+                                   suffix,".importance", sep ="")
+      pred_name <- paste(prediction_results_path,  .Platform$file.sep, "n_",n,  .Platform$file.sep,
+                         "test_crsubdist_ignore_", gsub(p, pattern = "\\.", replacement = ""),
                          "_",b,"_",i,"_", n, sep ="")
       filename_prediction <- paste(pred_name, ".prediction", sep ="")
       # uses same test data as above
@@ -180,18 +204,26 @@ for(i in c(seed_start:(seed_start+repeats))){ # single seed for single simulatio
       system(train_call,  show.output.on.console = TRUE)
       #Predict the forest
       system(pred_call, show.output.on.console = TRUE)
+      # move and remove
+      system(paste("mv", filename_importance_tmp, filename_importance)) 
       system(paste("rm", forest_file))
       
       #####################
       #### imputeNodes ####
       #####################
       # uses original data but imputes within the tree 
-      INPUT_FILE <- paste(path_prefix,"/", i,"/data_train_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
-      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_",gsub(p, pattern = "\\.", replacement = ""),
-                           "_",b,"_",i,"_", n, sep ="")
+      INPUT_FILE <- paste(path_prefix, .Platform$file.sep, i, .Platform$file.sep,
+                          "data_train_",p,"_", b,"_",i,"_",n,"_p_",vars,"_k.csv", sep ="")
+      suffix <- paste("crsubdist_",gsub(p, pattern = "\\.", replacement = ""), "_",b,"_",i,"_", n, sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path,.Platform$file.sep, "n_", n, .Platform$file.sep, 
+                           suffix, sep ="")
       forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
-      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
-      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_", gsub(p, pattern = "\\.", replacement = ""),
+      filename_importance_tmp <- paste(OUTPUT_FILE,".importance", sep ="")
+      filename_importance <- paste(prediction_results_path, .Platform$file.sep, "imp2", .Platform$file.sep,
+                                   "imputeNodes", .Platform$file.sep,
+                                   suffix,".importance", sep ="")
+      pred_name <- paste(prediction_results_path, .Platform$file.sep, "n_",n, .Platform$file.sep,
+                         "test_crsubdist_", gsub(p, pattern = "\\.", replacement = ""),
                          "_",b,"_",i,"_", n, sep ="")
       filename_prediction <- paste(pred_name, ".prediction", sep ="")
       # same test data as above
@@ -205,17 +237,24 @@ for(i in c(seed_start:(seed_start+repeats))){ # single seed for single simulatio
       system(train_call,  show.output.on.console = TRUE)
       #Predict the forest
       system(pred_call, show.output.on.console = TRUE)
+      # move and remove
+      system(paste("mv", filename_importance_tmp, filename_importance)) 
       system(paste("rm", forest_file))
       
       ####################
       #### imputeRoot ####
       ####################
       # uses same input file as imputeNodes
-      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_oinroot_",gsub(p, pattern = "\\.", replacement = ""),
-                           "_",b,"_",i,"_", n, sep ="")
+      suffix <- paste("crsubdist_oinroot_",gsub(p, pattern = "\\.", replacement = ""), "_",b,"_",i,"_", n, sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path, .Platform$file.sep, "n_", n, .Platform$file.sep, 
+                           suffix, sep ="")
       forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
-      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
-      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_oinroot_", gsub(p, pattern = "\\.", replacement = ""),
+      filename_importance_tmp <- paste(OUTPUT_FILE,".importance", sep ="")
+      filename_importance <- paste(prediction_results_path, .Platform$file.sep, "imp2", .Platform$file.sep,
+                                   "imputeRoot", .Platform$file.sep,
+                                   suffix,".importance", sep ="")
+      pred_name <- paste(prediction_results_path, .Platform$file.sep, "n_",n, .Platform$file.sep,
+                         "test_crsubdist_oinroot_", gsub(p, pattern = "\\.", replacement = ""),
                          "_",b,"_",i,"_", n, sep ="")
       filename_prediction <- paste(pred_name, ".prediction", sep ="")
       # same test data as above
@@ -229,19 +268,26 @@ for(i in c(seed_start:(seed_start+repeats))){ # single seed for single simulatio
       system(train_call,  show.output.on.console = TRUE)
       #Predict the forest
       system(pred_call, show.output.on.console = TRUE)
+      # move and remove
+      system(paste("mv", filename_importance_tmp, filename_importance)) 
       system(paste("rm", forest_file))
       
       
       ####################
       #### imputeOnce ####
       ####################  
-      # Uses input data that uses previpusly imputed Censoring times
-      INPUT_FILE <- paste(path_prefix,"/", i,"/data_train_oio_",p,"_", b,"_",i,"_",n,"_",vars,"_k.csv", sep ="")
-      OUTPUT_FILE <- paste(prediction_results_path,"/n_", n, "/crsubdist_oio_",gsub(p, pattern = "\\.", replacement = ""),
-                           "_",b,"_",i,"_", n, sep ="")
+      # Uses input data that uses previously imputed Censoring times
+      INPUT_FILE <- paste(path_prefix, .Platform$file.sep, i, .Platform$file.sep, "data_train_oio_",p,"_", b,"_",i,"_",n,"_",vars,"_k.csv", sep ="")
+      suffix <- paste("crsubdist_oio_",gsub(p, pattern = "\\.", replacement = ""), "_",b,"_",i,"_", n, sep ="")
+      OUTPUT_FILE <- paste(prediction_results_path, .Platform$file.sep, "n_", n, .Platform$file.sep, 
+                           suffix, sep ="")
       forest_file <- paste(OUTPUT_FILE, ".forest", sep ="")
-      filename_importance <- paste(OUTPUT_FILE,".importance", sep ="")
-      pred_name <- paste(prediction_results_path,"/n_",n, "/test_crsubdist_oio_", gsub(p, pattern = "\\.", replacement = ""),
+      filename_importance_tmp <- paste(OUTPUT_FILE,".importance", sep ="")
+      filename_importance <- paste(prediction_results_path, .Platform$file.sep, "imp2", .Platform$file.sep,
+                                   "imputeOnce", .Platform$file.sep,
+                                   suffix,".importance", sep ="")
+      pred_name <- paste(prediction_results_path,.Platform$file.sep, "n_",n, .Platform$file.sep,
+                         "test_crsubdist_oio_", gsub(p, pattern = "\\.", replacement = ""),
                          "_",b,"_",i,"_", n, sep ="")
       filename_prediction <- paste(pred_name, ".prediction", sep ="")
       # same test data as above
@@ -255,6 +301,8 @@ for(i in c(seed_start:(seed_start+repeats))){ # single seed for single simulatio
       system(train_call,  show.output.on.console = TRUE)
       #Predict the forest
       system(pred_call, show.output.on.console = TRUE)
+      # move and remove
+      system(paste("mv", filename_importance_tmp, filename_importance)) 
       system(paste("rm", forest_file))
     }
   }
