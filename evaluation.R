@@ -405,17 +405,28 @@ if(setup == "setup1"){
   caption_title <- "Table S2: Mean (SD) C-index values computed via cIndex in the discSurv Package."
 }
 
-cindex_df %>%
+table_12 <- cindex_df %>%
   left_join(mapping_method_type, by = "method") %>%
   mutate(type = factor(type, levels = c("imputeNode", "imputeRoot", "imputeOnce", "Naive approach", "Reference"))) %>% 
   group_by(type, p, b) %>%
   rename(q = p) %>% 
   mutate(q = paste("0.", q, sep = "")) %>%
   summarise(mean_c_index = paste( sprintf(mean(cindex, na.rm = TRUE),fmt = "%.4f"), " (", sprintf(sd(cindex, na.rm = TRUE),fmt = "%.3f"), ")", sep = "" )) %>%
-  pivot_wider(names_from = type, values_from = mean_c_index) %>%
+  pivot_wider(names_from = type, values_from = mean_c_index)
+
+table_12  %>%
   kableExtra::kable(caption = caption_title,
                     digits = 4) %>% # add format = "latex"
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
+
+if(setup == "setup1"){
+  write.csv(table_12, file = paste(output_prefix, "Table_S1.csv", sep = ""),
+             row.names = FALSE)
+}else if(setup == "setup2"){
+  write.csv(table_12, file = paste(output_prefix, "Table_S2.csv", sep = ""),
+            row.names = FALSE)
+  }
+
 
 
 #### Figure: Monte Carlo Error Mean C-Index on 10 batches ####
@@ -521,17 +532,27 @@ if(setup == "setup1"){
 }
 
 
-bierscore_df %>%
+table_s34 <- bierscore_df %>%
   left_join(mapping_method_type, by = "method") %>%
   mutate(type = factor(type, levels = c("imputeNode", "imputeRoot", "imputeOnce", "Naive approach", "Reference"))) %>% 
   group_by(type, p, b) %>%
   rename(q = p) %>% 
   mutate(q = paste("0.", q, sep = "")) %>%
   summarise(mean_c_index = paste( sprintf(mean(IBS, na.rm = TRUE),fmt = "%.4f"), " (", sprintf(sd(IBS, na.rm = TRUE),fmt = "%.4f"), ")", sep = "" )) %>%
-  pivot_wider(names_from = type, values_from = mean_c_index) %>%
+  pivot_wider(names_from = type, values_from = mean_c_index) 
+
+table_s34 %>%
   kableExtra::kable(caption = caption_title,
                     digits = 4) %>% # add  format = "latex"
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
+
+if(setup == "setup1"){
+  write.csv(table_s34, file = paste(output_prefix, "Table_S3.csv", sep = ""),
+            row.names = FALSE)
+}else if(setup == "setup2"){
+  write.csv(table_s34, file = paste(output_prefix, "Table_S4.csv", sep = ""),
+            row.names = FALSE)
+}
 
 
 #### Figure: Monte Carlo Error Mean IBS on 10 batches#####
@@ -762,20 +783,28 @@ pooled_10 %>%
                     digits = 4) %>% # add , format = "latex" to get latex table
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE)
 
+write.csv(pooled_10, file = paste(output_prefix, "Table_S11.csv", sep = ""),
+          row.names = FALSE)
+
+
 
 #### Table: GCKD VIMP of all covariates ####
 # Create Table S12: variable importance of all 38 covariates
-gckd_imp %>%
+ts12 <- gckd_imp %>%
   mutate(column = column_pretty) %>% 
   group_by(column, type) %>% 
   summarise(VIMP = mean(VIMP,na.rm = TRUE)) %>%
   group_by(type) %>% 
-  arrange(desc(VIMP)) %>% 
+  arrange(desc(VIMP)) 
+
+ts12 %>% 
   pivot_wider(names_from = type, values_from = VIMP) %>%
   kableExtra::kable(caption = "Table S12: Variable importance computed via local (casewise) imputation (ranger impmeasure = 6)",
                     digits = 6) %>% # add , format = "latex"
   kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) 
 
+write.csv(ts12, file = paste(output_prefix, "Table_S12.csv", sep = ""),
+          row.names = FALSE)
 
 
 

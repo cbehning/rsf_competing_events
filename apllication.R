@@ -463,7 +463,7 @@ syn_gckd_recoded <- syn_gckd %>%
 syn_gckd_recoded %>% select(time, status) %>% table()
 
 # Create Table S6
-table1::table1(~ age +
+ts6 <- table1::table1(~ age +
                  gender + # Sex - 0:male, 1:female 
                  alcohol + # 0:low-normal drinking, 1:heavy drinking
                  smoking + # 0:non smokers, 1:former smokers, 2:smokers 
@@ -475,9 +475,12 @@ table1::table1(~ age +
                  dem_beruf # professional qualification - 1:still in training, 2:apprenticeship, 3:master (craftsperson), 4:university degree, 5:without degree, 6:other, 7:unknown
                , data = syn_gckd_recoded 
 )
+write.table(ts10, paste(gckd_path,
+                        .Platform$file.sep, "Table_S6_syn.csv", sep = ""),
+            row.names = FALSE)
 
 # Create Table S7
-table1::table1(~ incl_criteria + # Study enrollment - 0:proteinuria, 1:low eGFR value
+ts7 <- table1::table1(~ incl_criteria + # Study enrollment - 0:proteinuria, 1:low eGFR value
                  bmi_korr + # BMI
                  hypertension + # 0:no, 1:yes
                  chd + # coronary heart disease - 0:no, 1:yes
@@ -487,8 +490,11 @@ table1::table1(~ incl_criteria + # Study enrollment - 0:proteinuria, 1:low eGFR 
                  aa_schmerzmittel # taking painkillers - 1:regularly, 2:when required, 3:never, 4: unknown
                , data = syn_gckd_recoded 
 )
+write.table(ts7, paste(gckd_path,
+                        .Platform$file.sep, "Table_S7_syn.csv", sep = ""),
+            row.names = FALSE)
 # Create Table S8
-table1::table1(~ crea_original + # serum creatinine
+ts8 <- table1::table1(~ crea_original + # serum creatinine
                  uacr +
                  eGFR_CKD_EPI + # eGFR
                  crpvalue1 + # CRP
@@ -496,14 +502,20 @@ table1::table1(~ crea_original + # serum creatinine
                  hdlvalue1, #HDL
                data = syn_gckd_recoded 
 )
+write.table(ts8, paste(gckd_path,
+                        .Platform$file.sep, "Table_S8_syn.csv", sep = ""),
+            row.names = FALSE)
 
 # Create Table S9
-table1::table1(~ aa_schlag2 + # number of siblings with stroke
+ts9 <- table1::table1(~ aa_schlag2 + # number of siblings with stroke
                  aa_nierenerk_1 # number of relatives with kidney disease
                ,data = syn_gckd_recoded 
 )
+write.table(ts9, paste(gckd_path,
+                        .Platform$file.sep, "Table_S9_syn.csv", sep = ""),
+            row.names = FALSE)
 # Create Table S10
-table1::table1(~fuehrende_nierenerkr + # leading kindey disease - 1:Obstructive nephropathy, 2: Acute kidney injury, 3:Miscellaneous, 4:Diabetic nephropathy
+ts10 <- table1::table1(~fuehrende_nierenerkr + # leading kindey disease - 1:Obstructive nephropathy, 2: Acute kidney injury, 3:Miscellaneous, 4:Diabetic nephropathy
                  # 5:Single kidney, 6:Hereditary kidney disease, 7:Interstitial nephropathy, 8:Undetermined, 9:Primary glomerulopathy
                  # 10:Systemic disease, 11:Vascular nephropathy
                  hyp_neph + # Vascular nephropathy - 0:no, 1:yes
@@ -519,4 +531,7 @@ table1::table1(~fuehrende_nierenerkr + # leading kindey disease - 1:Obstructive 
                  unknown # Undetermined - 0:no, 1:yes
                ,data = syn_gckd_recoded 
 )
+write.table(ts10, paste(gckd_path,
+                        .Platform$file.sep, "Table_S10_syn.csv", sep = ""),
+            row.names = FALSE)
 
