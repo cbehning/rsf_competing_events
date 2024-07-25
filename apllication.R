@@ -377,7 +377,7 @@ if(FALSE){
     ) 
   
   ggsave(cowplot::plot_grid(p1, p2, labels = c('A', 'B'))
-         , filename = paste(gckd_path, "syn_gckd_CIF_VIMP_4_d7.png", sep =.Platform$file.sep), device = "png", width = 10, height = 7)
+         , filename = paste(gckd_path, "Figure_4_syn.png", sep =.Platform$file.sep), device = "png", width = 10, height = 7)
   
 }
 

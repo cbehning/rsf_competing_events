@@ -100,6 +100,8 @@ source(data_generation.R)
 # The C++ standalone can then be run either using bash scripts or directly from the command line.
 # The train_predict.R will call the command line and run a single simulation run (5 approaches, 9 settings).
 # To do this, please set the path to the ranger executable in line 120.
+# Training and predition runs are stored to tmp_pred_setup1/ (for setup 1), but the location can be changed
+# in line 126 of train_predict.R
 # WARNING: We do not advice the following:
 # Bash scripts are provided in bash/ to run all 1000 simulation setups and can only be run, if all 1000
 # data settings were created first.
@@ -170,6 +172,7 @@ load("setup1_results_data.rda")
 # or the supplement. It also provides figures and tables of the application data.
 # Therefore, the summarized results are provided and can be loaded in the manuscript (see line 668f).
 source("evaluation.R")
+# To change from simulation setup1 to setup2, please change the setup parameter in line 28 to "setup2".
 
 # The plots are saved to output/ in png Format. 
 # Tables are printed in the R environment can can be printed as latex by addid format = "latex",
