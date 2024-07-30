@@ -55,11 +55,14 @@
 #"<setup>_results_data.rda" contains summary statistics needed to create all figure and tables
 
 # To reproduce the figures presented in the manuscript please run the master files or directly run the
-# evaluation file.
+# evaluation file. 
 # If all data was reproduced, please make sure to save them in preprocessing results, i.e. replace
 # the .rda files mentioned above by your own simulation runs.
 
 # The evaluation file loads all summarized measures of the original application data.
+# However, Tables S5-S10 are created pm a synthetic mock data set and therefore lead to differnt results
+# than presented in the mansucript-
+
 # To run the application with mock data, please refer to  application.R
 # Here, you can find  instructions to train and predict and preprocess results using a
 # synthetic data subset of the gckd data.
@@ -67,7 +70,7 @@
 # load("syn_gckd.rda")
 # To follow the instructions in application.R, the ranger C++ code has to be compiled first.
 # Please note, that the synthetic data loaded here will only produce similar, but not
-# identical results as the original GCKD data
+# identical results as the original GCKD data.
 
 
 # The file rsf_ce_master.R contains the master script and can be used to run all other files 

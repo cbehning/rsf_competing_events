@@ -170,9 +170,14 @@ if(setup == "setup1"){
 #### Figure: Illustration of comparison of C_i and \hat{C}_i ####
 # Creates Figure S3, only created for setup1
 if(setup == "setup1"){
-  # can only be computed if data was generated first using data_generation.R
+  # WARNING: Can only be computed if data was generated first using data_generation.R
   # with respective, n, k=vars, and seed values
-  # initialize values
+  if(! exists('data_setup1/71123/data_train_0.2_0.85_71123_1000_p_50_k.csv')){
+    print("Figure S3, S4, S5 can only be run, if the training data was generated first.")
+    print("Will run data_generation.R now")
+    source("data_generation.R")
+  }
+  # initialize values for loading
   n <- 1000
   k <- 50
   seed <- 71123
@@ -421,11 +426,11 @@ table_12  %>%
 
 if(setup == "setup1"){
   write.csv(table_12, file = paste(output_prefix, "Table_S1.csv", sep = ""),
-             row.names = FALSE)
+            row.names = FALSE)
 }else if(setup == "setup2"){
   write.csv(table_12, file = paste(output_prefix, "Table_S2.csv", sep = ""),
             row.names = FALSE)
-  }
+}
 
 
 
@@ -648,7 +653,7 @@ if(setup == "setup1"){
 # Plot 10 most important variables
 # Creates Figures S16-S20 or S21-S25, depending on the setup 
 
-load("setup1_importance.rda" )
+load(paste(setup,"_importance.rda", sep=""))
 approach_names <- c("Reference", "Naive approach", "imputeOnce", "imputeRoot", "imputeNode")
 
 for(type_ in names(type_colors2)){
@@ -807,5 +812,132 @@ write.csv(ts12, file = paste(output_prefix, "Table_S12.csv", sep = ""),
           row.names = FALSE)
 
 
+################
+## MOCK DATA ###
+################
 
 
+#### Table: GCKD Characteristics on synthetic data ####
+
+# WARNING: Please not that the tables below are only provided on mock data. 
+# Therefore, the resulting tables will not perfectly align with the published results
+# on the original GCKD data.
+
+# load synthetic data
+load("syn_gckd.rda")
+
+# recode into meaningful names
+syn_gckd_recoded <- syn_gckd %>%
+  mutate(across(c(status, incl_criteria, fuehrende_nierenerkr, gender, employment,
+                  dem_famstand, dem_beruf, dem_privat, alcohol, smoking,
+                  chd, stroke, diab_neph, 
+                  aa_schlag2, aa_schmerzmittel, aa_copd, aa_asthma, aa_nierenerk_1,hyp_neph, hypertension, pr_glom_path, systemic,
+                  p_renal, int_neph, acute_fail, single_kidney, hereditary, other, unknown ), 
+                ~as.factor(.))) %>%
+  # manually rename to match manuscript output
+  mutate( status = fct_recode(status,  "Censored" = "0", "KF"= "1", "Death"="2"),
+          Sex = fct_recode(gender, "male" = "0", "female" = "1"),
+          alcohol = fct_recode(alcohol, "low-normal drinking" = "0",  "heavy drinking"= "1"),
+          smoking = fct_recode(smoking, "non smokers"="0", "former smokers"="1", "smokers"="2"),
+          family_status = fct_recode(dem_famstand, 
+                                     "single" = "1", "married or in a stable partnership" = "2", "separated or divorced" = "3",
+                                     "widowed" = "4"),
+          employment = fct_recode(employment, 
+                                  "fully employed" = "1", "part-time" = "2", "housework" = "3", "pension" = "4", 
+                                  "job-seeker" = "5", "training" = "6"), #,  "other" = "7"),
+          private_insurance = fct_recode(dem_privat, "no" = "0", "yes" = "1"),
+          professional_qualification = fct_recode(dem_beruf, 
+                                                  "still in training" = "1", "apprenticeship" = "2", "master (craftsperson)" = "3", 
+                                                  "university degree" = "4", "without degree" = "5", "other" = "6", "unknown" = "7"),
+          Study_enrollment = fct_recode(incl_criteria,  "proteinuria" = "0", "low eGFR value" = "1"),
+          hypertension = fct_recode(hypertension, "no" = "0", "yes" = "1"),
+          coronary_heart_disease = fct_recode(chd, "no" = "0", "yes" = "1"),
+          stroke = fct_recode(stroke, "no" = "0", "yes" = "1"),
+          asthma = fct_recode(aa_asthma, "yes" = "1", "no" = "2"),# "unknown" = "3"),
+          copd = fct_recode(aa_copd, "yes" = "1", "no" = "2", "unknown" = "3"),
+          taking_painkillers = fct_recode(aa_schmerzmittel, "regularly" = "1", "when required" = "2", "never" = "3", "unknown" = "4"),
+          leading_kidney_disease = fct_recode(fuehrende_nierenerkr, 
+                                              "Obstructive nephropathy" = "1", 
+                                              "Acute kidney injury" = "2", 
+                                              "Miscellaneous" = "3", 
+                                              "Diabetic nephropathy" = "4", 
+                                              "Single kidney" = "5", 
+                                              "Hereditary kidney disease" = "6", 
+                                              "Interstitial nephropathy" = "7", 
+                                              "Undetermined" = "8", 
+                                              "Primary glomerulopathy" = "9", 
+                                              "Systemic disease" = "10", 
+                                              "Vascular nephropathy" = "11"),
+          Vascular_nephropathy = fct_recode(hyp_neph, "no" = "0", "yes" = "1"),
+          Primary_glomerulopathy = fct_recode(pr_glom_path, "no" = "0", "yes" = "1"),
+          Diabetic_nephropathy = fct_recode(diab_neph, "no" = "0", "yes" = "1"),
+          Systemic_disease = fct_recode(systemic, "no" = "0", "yes" = "1"),
+          Hereditary_kidney_disease = fct_recode(hereditary, "no" = "0", "yes" = "1"),
+          Interstitial_nephropathy = fct_recode(int_neph, "no" = "0", "yes" = "1"),
+          single_kidney = fct_recode(single_kidney, "no" = "0", "yes" = "1"),
+          Obstructive_nephropathy = fct_recode(p_renal, "no" = "0", "yes" = "1"),
+          Acute_kidney_injury = fct_recode(acute_fail, "no" = "0", "yes" = "1"),
+          Miscellaneous = fct_recode(other, "no" = "0", "yes" = "1"),
+          Undetermined = fct_recode(unknown, "no" = "0", "yes" = "1")
+  ) %>% 
+  rename(number_of_siblings = aa_geschwist,
+         number_of_people_living_in_the_household = dem_anz_pers,
+         BMI = bmi_korr,
+         serum_creatinine = crea_original,
+         eGFR = eGFR_CKD_EPI,
+         CRP = crpvalue1,
+         LDL = ldlvalue1,
+         HDL =  hdlvalue1,
+         number_of_siblings_with_stroke = aa_schlag2,
+         number_of_relatives_with_kidney_disease =  aa_nierenerk_1,
+         
+  )
+
+# Create Table S5 on synthetic data
+# status 0: Censored, 1: KF, 2: Death
+ts5 <- syn_gckd_recoded %>% select(time, status) %>% table()
+
+write.table(ts5, paste(output_prefix,
+                       .Platform$file.sep, "Table_S5_syn.csv", sep = ""),
+            row.names = FALSE)
+
+# Create Table S6
+ts6 <- table1::table1(~ age + Sex + alcohol + smoking + family_status +  number_of_siblings + 
+                        number_of_people_living_in_the_household + employment + private_insurance + professional_qualification 
+                      , data = syn_gckd_recoded 
+)
+write.table(ts6, paste(output_prefix,
+                       .Platform$file.sep, "Table_S6_syn.csv", sep = ""),
+            row.names = FALSE)
+
+# Create Table S7
+ts7 <- table1::table1(~ Study_enrollment + BMI + hypertension + coronary_heart_disease + stroke +  asthma + copd +  taking_painkillers
+                      , data = syn_gckd_recoded 
+)
+write.table(ts7, paste(output_prefix,
+                       .Platform$file.sep, "Table_S7_syn.csv", sep = ""),
+            row.names = FALSE)
+# Create Table S8
+ts8 <- table1::table1(~ serum_creatinine + uacr + eGFR  + CRP + LDL + HDL,
+                      data = syn_gckd_recoded 
+)
+write.table(ts8, paste(output_prefix,
+                       .Platform$file.sep, "Table_S8_syn.csv", sep = ""),
+            row.names = FALSE)
+
+# Create Table S9
+ts9 <- table1::table1(~  number_of_siblings_with_stroke + number_of_relatives_with_kidney_disease, 
+                      data = syn_gckd_recoded 
+)
+write.table(ts9, paste(output_prefix,
+                       .Platform$file.sep, "Table_S9_syn.csv", sep = ""),
+            row.names = FALSE)
+# Create Table S10
+ts10 <- table1::table1(~leading_kidney_disease + Vascular_nephropathy + Primary_glomerulopathy + Diabetic_nephropathy +
+                         Systemic_disease +  Hereditary_kidney_disease + Interstitial_nephropathy + single_kidney +
+                         Obstructive_nephropathy + Acute_kidney_injury + Miscellaneous + Undetermined
+                       ,data = syn_gckd_recoded 
+)
+write.table(ts10, paste(output_prefix,
+                        .Platform$file.sep, "Table_S10_syn.csv", sep = ""),
+            row.names = FALSE)
