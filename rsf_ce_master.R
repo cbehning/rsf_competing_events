@@ -133,7 +133,8 @@ untar("pred_setup1.tar.gz")
 # The script evaluation.R creates all figures and tables of the simulation results as presented in the manuscript
 # or the supplement. The script also creates figures and tables of application of RSF methods on GCKD data.
 source("evaluation.R")
-# Please note, that the script will execute data_generation.R, if the neccesray files of seed 71123 do not already exist.
+# The setup parameter in line 28 determines which simulation setup is evaluated. Change to "setup2" to get for setup 2.
+# Please note, that the script will execute data_generation.R, if the necessary files of seed 71123 do not already exist.
 # WARNING: In case you have modified the parameters in data_generation.R, running evaluation.R might become
 # resource intensive (if no data for seed 71123 exists.)
 # Please note: Results for Table S5-S10 are created on the mock data and therefore lead to slightly different results that 

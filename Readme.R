@@ -56,12 +56,14 @@
 
 # To reproduce the figures presented in the manuscript please run the master files or directly run the
 # evaluation file. 
+# The parameters on evaluation.R are set to setup1. Please change the parameter in line 28 to "setup2"
+# to get the remaining results.
 # If all data was reproduced, please make sure to save them in preprocessing results, i.e. replace
 # the .rda files mentioned above by your own simulation runs.
 
 # The evaluation file loads all summarized measures of the original application data.
-# However, Tables S5-S10 are created pm a synthetic mock data set and therefore lead to differnt results
-# than presented in the mansucript-
+# However, Tables S5-S10 are created pm a synthetic mock data set and therefore lead to different results
+# than presented in the mansucript.
 
 # To run the application with mock data, please refer to  application.R
 # Here, you can find  instructions to train and predict and preprocess results using a
