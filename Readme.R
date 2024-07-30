@@ -20,8 +20,8 @@
 
 # This code has been written in R version 4.3.0
 # The working directory is expected to be the same for all settings. If the code is not 
-# run as pulled from the git project, please make sure to set the workspace appropriately,
-# e.g. by setwd(). Subfolders will be created in some of the scripts.
+# run as pulled from the git project, please make sure to set the work space appropriately,
+# e.g. by setwd(). Sub folders will be created in some of the scripts.
 
 # We prepared a master script called rsf_ce_master.R to help you run the code.
 
